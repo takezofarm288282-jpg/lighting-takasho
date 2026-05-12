@@ -1583,6 +1583,11 @@ export default function SelectorPage() {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [showEstimate, setShowEstimate] = useState(false);
+  const [userName, setUserName] = useState(() => (typeof window !== "undefined" ? localStorage.getItem("userName") || "" : ""));
+  const [postalCode, setPostalCode] = useState(() => (typeof window !== "undefined" ? localStorage.getItem("postalCode") || "" : ""));
+  const [userInfoConfirmed, setUserInfoConfirmed] = useState(() => typeof window !== "undefined" ? !!(localStorage.getItem("userName") && localStorage.getItem("postalCode")) : false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
   const [priceRange, setPriceRange] = useState(PRICE_RANGES[0]);
   const [colorTemp, setColorTemp] = useState("指定なし");
   const [style, setStyle] = useState("指定なし");
@@ -1725,6 +1730,120 @@ export default function SelectorPage() {
   ];
 
   const stepIndex = steps.findIndex((s) => s.key === step);
+
+  // User info gate — show full-screen form until confirmed
+  if (!userInfoConfirmed) {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        background: "var(--color-bg)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "24px",
+      }}>
+        <div style={{
+          width: "100%",
+          maxWidth: 420,
+          background: "var(--color-surface)",
+          border: "1px solid var(--color-border)",
+          borderRadius: 16,
+          padding: "36px 32px",
+        }}>
+          <div style={{ textAlign: "center", marginBottom: 28 }}>
+            <div style={{ fontFamily: "'Noto Serif JP', serif", fontSize: 13, letterSpacing: "0.2em", color: "var(--color-accent)", marginBottom: 8 }}>
+              TAKASHO LIGHTING
+            </div>
+            <h1 style={{ margin: 0, fontFamily: "'Noto Serif JP', serif", fontSize: 20, fontWeight: 700, color: "var(--color-text)" }}>
+              ご利用前にお客様情報を<br />ご入力ください
+            </h1>
+            <p style={{ margin: "12px 0 0", fontSize: 12, color: "var(--color-text-muted)" }}>
+              見積もり送信時に使用します
+            </p>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div>
+              <label style={{ display: "block", fontSize: 12, color: "var(--color-text-muted)", marginBottom: 6, fontFamily: "'Noto Sans JP', sans-serif" }}>
+                お名前 <span style={{ color: "#e05" }}>*</span>
+              </label>
+              <input
+                type="text"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                placeholder="例：田中 太郎"
+                style={{
+                  width: "100%",
+                  padding: "12px 14px",
+                  background: "var(--color-surface2)",
+                  border: "1px solid var(--color-border)",
+                  borderRadius: 8,
+                  color: "var(--color-text)",
+                  fontSize: 14,
+                  fontFamily: "'Noto Sans JP', sans-serif",
+                  boxSizing: "border-box",
+                  outline: "none",
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: "block", fontSize: 12, color: "var(--color-text-muted)", marginBottom: 6, fontFamily: "'Noto Sans JP', sans-serif" }}>
+                郵便番号 <span style={{ color: "#e05" }}>*</span>
+              </label>
+              <input
+                type="text"
+                value={postalCode}
+                onChange={(e) => setPostalCode(e.target.value)}
+                placeholder="例：123-4567"
+                maxLength={8}
+                style={{
+                  width: "100%",
+                  padding: "12px 14px",
+                  background: "var(--color-surface2)",
+                  border: "1px solid var(--color-border)",
+                  borderRadius: 8,
+                  color: "var(--color-text)",
+                  fontSize: 14,
+                  fontFamily: "'Noto Sans JP', sans-serif",
+                  boxSizing: "border-box",
+                  outline: "none",
+                }}
+              />
+            </div>
+
+            <button
+              onClick={() => {
+                if (!userName.trim() || !postalCode.trim()) return;
+                localStorage.setItem("userName", userName.trim());
+                localStorage.setItem("postalCode", postalCode.trim());
+                setUserName(userName.trim());
+                setPostalCode(postalCode.trim());
+                setUserInfoConfirmed(true);
+              }}
+              disabled={!userName.trim() || !postalCode.trim()}
+              style={{
+                width: "100%",
+                padding: "14px",
+                marginTop: 8,
+                background: (!userName.trim() || !postalCode.trim()) ? "var(--color-surface2)" : "var(--color-accent)",
+                border: "none",
+                borderRadius: 8,
+                color: (!userName.trim() || !postalCode.trim()) ? "var(--color-text-muted)" : "#ffffff",
+                cursor: (!userName.trim() || !postalCode.trim()) ? "not-allowed" : "pointer",
+                fontSize: 14,
+                fontWeight: 700,
+                fontFamily: "'Noto Sans JP', sans-serif",
+                transition: "background 0.2s",
+              }}
+            >
+              はじめる
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--color-bg)" }}>
@@ -3433,7 +3552,51 @@ export default function SelectorPage() {
                   ※ 工事費・配線費用は含まれていません。別途お見積もりが必要です。
                 </p>
 
-                <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+                {/* Send estimate button */}
+                <div style={{ marginTop: 16 }}>
+                  <button
+                    onClick={async () => {
+                      if (emailSending || emailSent) return;
+                      setEmailSending(true);
+                      try {
+                        await fetch("/api/send-estimate", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            name: userName,
+                            postalCode,
+                            items: estimateResult!.items,
+                            total: estimateResult!.total,
+                          }),
+                        });
+                        setEmailSent(true);
+                        setTimeout(() => setEmailSent(false), 4000);
+                      } catch {
+                        // silent fail
+                      } finally {
+                        setEmailSending(false);
+                      }
+                    }}
+                    disabled={emailSending}
+                    style={{
+                      width: "100%",
+                      padding: "14px",
+                      background: emailSent ? "#2a7a4f" : "var(--color-accent)",
+                      border: "none",
+                      borderRadius: 8,
+                      color: "#ffffff",
+                      cursor: emailSending ? "wait" : "pointer",
+                      fontSize: 14,
+                      fontWeight: 700,
+                      fontFamily: "'Noto Sans JP', sans-serif",
+                      transition: "background 0.3s",
+                    }}
+                  >
+                    {emailSent ? "✓ 見積を送信しました" : emailSending ? "送信中..." : "この見積を担当者に送る"}
+                  </button>
+                </div>
+
+                <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
                   <button
                     onClick={() => { clearItems(); setShowEstimate(false); setStep("location"); }}
                     style={{
@@ -3454,11 +3617,11 @@ export default function SelectorPage() {
                     onClick={() => setShowEstimate(false)}
                     style={{
                       flex: 2,
-                      background: "var(--color-accent)",
-                      border: "none",
+                      background: "var(--color-surface2)",
+                      border: "1px solid var(--color-border)",
                       borderRadius: 8,
                       padding: "12px",
-                      color: "#ffffff",
+                      color: "var(--color-text)",
                       cursor: "pointer",
                       fontSize: 13,
                       fontWeight: 700,

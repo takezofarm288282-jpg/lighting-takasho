@@ -3,6 +3,7 @@ import { cors } from "hono/cors";
 import { db } from "./database";
 import * as schema from "./database/schema";
 import { eq, and, gte, lte, inArray, sql } from "drizzle-orm";
+import { exec } from "child_process";
 
 const app = new Hono()
   .basePath("api")
@@ -133,6 +134,95 @@ const app = new Hono()
 
     const total = items.reduce((sum, i) => sum + (i?.subtotal ?? 0), 0);
     return c.json({ estimate: { items, total } }, 200);
+  })
+
+  // Send estimate email
+  .post("/send-estimate", async (c) => {
+    const { name, postalCode, items, total } = await c.req.json<{
+      name: string;
+      postalCode: string;
+      items: { product: { id: number; name: string; modelNo: string; price: number }; quantity: number; subtotal: number }[];
+      total: number;
+    }>();
+
+    const tax = Math.floor(total * 0.1);
+    const totalWithTax = Math.floor(total * 1.1);
+
+    const itemRows = items.map((item) =>
+      `<tr>
+        <td style="padding:8px 12px;border-bottom:1px solid #333;">${item.product.modelNo}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #333;">${item.product.name}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #333;text-align:center;">${item.quantity}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #333;text-align:right;">¥${item.product.price.toLocaleString()}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #333;text-align:right;">¥${item.subtotal.toLocaleString()}</td>
+      </tr>`
+    ).join("");
+
+    const html = `<!DOCTYPE html>
+<html lang="ja">
+<head><meta charset="UTF-8"><title>お見積もり</title></head>
+<body style="font-family:'Helvetica Neue',Arial,sans-serif;background:#1a1a1a;color:#e8e8e8;margin:0;padding:24px;">
+  <div style="max-width:640px;margin:0 auto;background:#222;border-radius:12px;overflow:hidden;">
+    <div style="background:#c8a96e;padding:24px 32px;">
+      <h1 style="margin:0;font-size:22px;color:#1a1a1a;font-weight:700;">お見積もり依頼</h1>
+    </div>
+    <div style="padding:28px 32px;">
+      <h2 style="font-size:15px;color:#c8a96e;margin:0 0 16px;">お客様情報</h2>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:28px;">
+        <tr>
+          <td style="padding:8px 12px;background:#2a2a2a;border-radius:4px;color:#aaa;font-size:13px;width:120px;">お名前</td>
+          <td style="padding:8px 12px;font-size:14px;">${name}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 12px;background:#2a2a2a;border-radius:4px;color:#aaa;font-size:13px;">郵便番号</td>
+          <td style="padding:8px 12px;font-size:14px;">〒${postalCode}</td>
+        </tr>
+      </table>
+
+      <h2 style="font-size:15px;color:#c8a96e;margin:0 0 16px;">見積内容</h2>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="background:#2a2a2a;">
+            <th style="padding:10px 12px;text-align:left;color:#aaa;font-weight:500;">型番</th>
+            <th style="padding:10px 12px;text-align:left;color:#aaa;font-weight:500;">商品名</th>
+            <th style="padding:10px 12px;text-align:center;color:#aaa;font-weight:500;">数量</th>
+            <th style="padding:10px 12px;text-align:right;color:#aaa;font-weight:500;">単価</th>
+            <th style="padding:10px 12px;text-align:right;color:#aaa;font-weight:500;">小計</th>
+          </tr>
+        </thead>
+        <tbody>${itemRows}</tbody>
+      </table>
+
+      <div style="margin-top:20px;padding:16px 20px;background:#2a2a2a;border-radius:8px;border-left:3px solid #c8a96e;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;color:#aaa;">
+          <span>小計（税別）</span><span>¥${total.toLocaleString()}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #444;font-size:13px;color:#aaa;">
+          <span>消費税（10%）</span><span>¥${tax.toLocaleString()}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:700;color:#c8a96e;">
+          <span>合計（税込）</span><span>¥${totalWithTax.toLocaleString()}</span>
+        </div>
+      </div>
+
+      <p style="font-size:11px;color:#666;margin-top:16px;text-align:center;">
+        ※ 工事費・配線費用は含まれていません。別途お見積もりが必要です。
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    await new Promise<void>((resolve, reject) => {
+      const child = exec(
+        `send-email --to "izumo@takezofarm.co.jp" --subject "【見積依頼】${name} 様（〒${postalCode}）" --html -`,
+        (err) => { if (err) reject(err); else resolve(); }
+      );
+      child.stdin!.write(html);
+      child.stdin!.end();
+    });
+
+    return c.json({ ok: true }, 200);
   });
 
 export type AppType = typeof app;
