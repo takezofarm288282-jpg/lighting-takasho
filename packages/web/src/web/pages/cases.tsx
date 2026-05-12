@@ -282,7 +282,7 @@ function CaseArticle({ cs, index }: { cs: CaseStudy; index: number }) {
               <li key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
                 <span style={{
                   flexShrink: 0, width: 22, height: 22, borderRadius: "50%",
-                  background: cs.color, color: "#0d1a0d",
+                  background: cs.color, color: "#ffffff",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   fontSize: 11, fontWeight: 800, marginTop: 1,
                 }}>
@@ -379,7 +379,7 @@ export default function CasesPage() {
 
       {/* ── ヒーローバナー ── */}
       <div style={{
-        background: "linear-gradient(135deg, #0a0a00 0%, #0d1a0d 40%, #0a0010 100%)",
+        background: "linear-gradient(135deg, #f5efe6 0%, #ede3d5 50%, #e8ddd0 100%)",
         padding: "60px 28px 52px",
         textAlign: "center",
         position: "relative",
@@ -403,7 +403,7 @@ export default function CasesPage() {
           <h2 style={{
             fontSize: 38, fontWeight: 700, margin: "0 0 18px",
             fontFamily: "'Noto Serif JP', serif",
-            background: "linear-gradient(120deg, #c8a84b, #f5e490, #c8a84b)",
+            background: "linear-gradient(120deg, #502200, #8b4a00, #502200)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
             backgroundClip: "text",
@@ -412,7 +412,7 @@ export default function CasesPage() {
             空間を変える、光のデザイン
           </h2>
           <p style={{
-            fontSize: 14, color: "#ffffff88", lineHeight: 1.95, margin: 0,
+            fontSize: 14, color: "var(--color-text-muted)", lineHeight: 1.95, margin: 0,
             fontFamily: "'Noto Sans JP', sans-serif",
           }}>
             エントランス・ガーデン・テラス・ランドスケープ——<br />
@@ -490,7 +490,7 @@ export default function CasesPage() {
             style={{
               flexShrink: 0,
               display: "inline-flex", alignItems: "center", gap: 8,
-              background: "var(--color-accent)", color: "#0d1a0d",
+              background: "var(--color-accent)", color: "#ffffff",
               border: "none", borderRadius: 10, padding: "10px 22px",
               fontSize: 13, fontWeight: 700, cursor: "pointer",
               fontFamily: "'Noto Sans JP', sans-serif",

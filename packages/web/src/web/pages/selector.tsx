@@ -341,7 +341,7 @@ function SpecBadge({
             top: tooltipPos.top,
             left: tooltipPos.left,
             transform: "translate(-50%, -100%)",
-            background: "rgba(13,26,13,0.95)",
+            background: "var(--color-surface)",
             border: `1px solid ${specDef.color}50`,
             borderRadius: 8,
             padding: "6px 10px",
@@ -964,7 +964,7 @@ function TransformerCalculator() {
                 fontFamily: "'Noto Sans JP', sans-serif", fontSize: 13, fontWeight: 700,
                 transition: "all 0.2s",
                 background: voltage === v ? (v === "24V" ? "#4ade80" : "#f87171") : "var(--color-surface2)",
-                color: voltage === v ? "#0d1a0d" : "var(--color-text-muted)",
+                color: voltage === v ? "#ffffff" : "var(--color-text-muted)",
               }}
             >
               {v} {v === "24V" ? "推奨" : "（終了予定）"}
@@ -1231,7 +1231,7 @@ function TransformerGuide() {
                 <button key={v} onClick={() => setFilterVoltage(v)} style={{
                   padding: "4px 12px", borderRadius: 20, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600,
                   background: filterVoltage === v ? "var(--color-accent)" : "var(--color-surface2)",
-                  color: filterVoltage === v ? "#0d1a0d" : "var(--color-text-muted)",
+                  color: filterVoltage === v ? "#ffffff" : "var(--color-text-muted)",
                 }}>
                   {v === "all" ? "すべて" : v}
                 </button>
@@ -1243,7 +1243,7 @@ function TransformerGuide() {
                 <button key={t} onClick={() => setFilterType(t)} style={{
                   padding: "4px 12px", borderRadius: 20, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600,
                   background: filterType === t ? "var(--color-accent)" : "var(--color-surface2)",
-                  color: filterType === t ? "#0d1a0d" : "var(--color-text-muted)",
+                  color: filterType === t ? "#ffffff" : "var(--color-text-muted)",
                 }}>
                   {t === "all" ? "すべて" : t === "timer" ? "タイマー付" : "シンプル（常時）"}
                 </button>
@@ -1276,7 +1276,7 @@ function TransformerGuide() {
                   <div style={{
                     position: "absolute", top: 12, right: 12,
                     background: product.badge === "NEW" ? "var(--color-accent)" : "rgba(248,113,113,0.8)",
-                    color: product.badge === "NEW" ? "#0d1a0d" : "#fff",
+                    color: product.badge === "NEW" ? "#ffffff" : "#fff",
                     borderRadius: 4, padding: "2px 8px", fontSize: 10, fontWeight: 700,
                   }}>
                     {product.badge}
@@ -1350,7 +1350,7 @@ function TransformerGuide() {
             ].map(item => (
               <div key={item.step} style={{ background: "var(--color-surface2)", borderRadius: 10, padding: "14px 16px", border: "1px solid var(--color-border)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "var(--color-accent)", color: "#0d1a0d", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "var(--color-accent)", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
                     {item.step}
                   </div>
                   <span style={{ fontSize: 14 }}>{item.icon}</span>
@@ -1704,7 +1704,7 @@ export default function SelectorPage() {
       {/* Header */}
       <header
         style={{
-          background: "linear-gradient(180deg, rgba(13,26,13,0.98) 0%, rgba(21,32,21,0.95) 100%)",
+          background: "linear-gradient(180deg, rgba(249,246,242,0.98) 0%, rgba(255,255,255,0.95) 100%)",
           borderBottom: "1px solid var(--color-border)",
           position: "sticky",
           top: 0,
@@ -1731,7 +1731,7 @@ export default function SelectorPage() {
                 alignItems: "center",
                 gap: 8,
                 background: "var(--color-accent)",
-                color: "#0d1a0d",
+                color: "#ffffff",
                 border: "none",
                 borderRadius: 24,
                 padding: "8px 16px",
@@ -1789,7 +1789,7 @@ export default function SelectorPage() {
                         alignItems: "center",
                         justifyContent: "center",
                         fontSize: 11,
-                        color: isDone || isActive ? "#0d1a0d" : "var(--color-text-muted)",
+                        color: isDone || isActive ? "#ffffff" : "var(--color-text-muted)",
                         fontWeight: 700,
                       }}
                     >
@@ -1825,7 +1825,7 @@ export default function SelectorPage() {
               fontFamily: "'Noto Sans JP', sans-serif", fontSize: 14, fontWeight: 600,
               transition: "all 0.2s",
               background: selectMode === "location" ? "var(--color-accent)" : "transparent",
-              color: selectMode === "location" ? "#0d1a0d" : "var(--color-text-muted)",
+              color: selectMode === "location" ? "#ffffff" : "var(--color-text-muted)",
             }}
           >
             <MapPin size={16} />
@@ -1846,7 +1846,7 @@ export default function SelectorPage() {
               fontFamily: "'Noto Sans JP', sans-serif", fontSize: 14, fontWeight: 600,
               transition: "all 0.2s",
               background: selectMode === "tree" ? "var(--color-accent)" : "transparent",
-              color: selectMode === "tree" ? "#0d1a0d" : "var(--color-text-muted)",
+              color: selectMode === "tree" ? "#ffffff" : "var(--color-text-muted)",
             }}
           >
             <Trees size={16} />
@@ -1864,7 +1864,7 @@ export default function SelectorPage() {
               fontFamily: "'Noto Sans JP', sans-serif", fontSize: 14, fontWeight: 600,
               transition: "all 0.2s",
               background: selectMode === "shape" ? "var(--color-accent)" : "transparent",
-              color: selectMode === "shape" ? "#0d1a0d" : "var(--color-text-muted)",
+              color: selectMode === "shape" ? "#ffffff" : "var(--color-text-muted)",
             }}
           >
             <Layers size={16} />
@@ -1878,7 +1878,7 @@ export default function SelectorPage() {
               fontFamily: "'Noto Sans JP', sans-serif", fontSize: 14, fontWeight: 600,
               transition: "all 0.2s",
               background: selectMode === "transformer" ? "var(--color-accent)" : "transparent",
-              color: selectMode === "transformer" ? "#0d1a0d" : "var(--color-text-muted)",
+              color: selectMode === "transformer" ? "#ffffff" : "var(--color-text-muted)",
             }}
           >
             <Plug size={16} />
@@ -1933,12 +1933,12 @@ export default function SelectorPage() {
                           <div style={{
                             width: 18, height: 18, borderRadius: "50%", fontSize: 10, fontWeight: 700,
                             display: "flex", alignItems: "center", justifyContent: "center",
-                            background: isDone ? "var(--color-accent)" : isActive ? "#0d1a0d" : "var(--color-surface2)",
-                            color: isDone ? "#0d1a0d" : isActive ? "var(--color-accent)" : "var(--color-text-muted)",
+                            background: isDone ? "var(--color-accent)" : isActive ? "#ffffff" : "var(--color-surface2)",
+                            color: isDone ? "#ffffff" : isActive ? "var(--color-accent)" : "var(--color-text-muted)",
                           }}>
                             {isDone ? <Check size={10} /> : i + 1}
                           </div>
-                          <span style={{ fontSize: 11, fontWeight: isActive ? 700 : 400, color: isActive ? "#0d1a0d" : isDone ? "var(--color-accent)" : "var(--color-text-muted)" }}>
+                          <span style={{ fontSize: 11, fontWeight: isActive ? 700 : 400, color: isActive ? "#ffffff" : isDone ? "var(--color-accent)" : "var(--color-text-muted)" }}>
                             {s.label}
                           </span>
                         </div>
@@ -1997,7 +1997,7 @@ export default function SelectorPage() {
                           }}
                         />
                         <div style={{ display: "none", position: "absolute", inset: 0, alignItems: "center", justifyContent: "center", fontSize: 48 }}>{t.emoji}</div>
-                        <div style={{ position: "absolute", top: 8, right: 8, background: t.color, color: "#0d1a0d", borderRadius: 6, padding: "2px 8px", fontSize: 11, fontWeight: 700 }}>{t.sublabel}</div>
+                        <div style={{ position: "absolute", top: 8, right: 8, background: t.color, color: "#ffffff", borderRadius: 6, padding: "2px 8px", fontSize: 11, fontWeight: 700 }}>{t.sublabel}</div>
                       </div>
                       <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
                         <span style={{ fontFamily: "'Noto Serif JP', serif", fontSize: 18, fontWeight: 700, color: "var(--color-text)" }}>{t.label}</span>
@@ -2236,7 +2236,7 @@ export default function SelectorPage() {
                     <p style={{ fontSize: 13, marginTop: 8 }}>条件を変えてお試しください</p>
                     <button
                       onClick={() => setTreeStep("voltageStep")}
-                      style={{ marginTop: 16, background: "var(--color-accent)", color: "#0d1a0d", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Noto Sans JP', sans-serif" }}
+                      style={{ marginTop: 16, background: "var(--color-accent)", color: "#ffffff", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Noto Sans JP', sans-serif" }}
                     >
                       電圧を変更する
                     </button>
@@ -2275,7 +2275,7 @@ export default function SelectorPage() {
                                 {!inList ? (
                                   <button
                                     onClick={() => addItem(product.id)}
-                                    style={{ width: "100%", background: "var(--color-accent)", color: "#0d1a0d", border: "none", borderRadius: 8, padding: "10px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Noto Sans JP', sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                                    style={{ width: "100%", background: "var(--color-accent)", color: "#ffffff", border: "none", borderRadius: 8, padding: "10px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Noto Sans JP', sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
                                   >
                                     <Plus size={14} /> 見積もりに追加
                                   </button>
@@ -2516,7 +2516,7 @@ export default function SelectorPage() {
                                 {!inCart ? (
                                   <button
                                     onClick={() => addItem(product.id)}
-                                    style={{ width: "100%", background: selectedShape.color, color: "#0d1a0d", border: "none", borderRadius: 8, padding: "10px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Noto Sans JP', sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                                    style={{ width: "100%", background: selectedShape.color, color: "#ffffff", border: "none", borderRadius: 8, padding: "10px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Noto Sans JP', sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
                                   >
                                     <Plus size={14} /> 見積もりに追加
                                   </button>
@@ -2977,7 +2977,7 @@ export default function SelectorPage() {
                       <div
                         style={{
                           height: 160,
-                          background: "linear-gradient(135deg, var(--color-surface2) 0%, #0d1f0d 100%)",
+                          background: "linear-gradient(135deg, var(--color-surface2) 0%, var(--color-bg) 100%)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
@@ -3008,7 +3008,7 @@ export default function SelectorPage() {
                             inset: 0,
                             alignItems: "center",
                             justifyContent: "center",
-                            background: "linear-gradient(135deg, var(--color-surface2) 0%, #0d1f0d 100%)",
+                            background: "linear-gradient(135deg, var(--color-surface2) 0%, var(--color-bg) 100%)",
                           }}
                         >
                           <LocationIcon
@@ -3024,7 +3024,7 @@ export default function SelectorPage() {
                               top: 10,
                               right: 10,
                               background: "var(--color-accent)",
-                              color: "#0d1a0d",
+                              color: "#ffffff",
                               borderRadius: "50%",
                               width: 28,
                               height: 28,
@@ -3091,7 +3091,7 @@ export default function SelectorPage() {
                             style={{
                               width: "100%",
                               background: "var(--color-accent)",
-                              color: "#0d1a0d",
+                              color: "#ffffff",
                               border: "none",
                               borderRadius: 8,
                               padding: "10px",
@@ -3202,7 +3202,7 @@ export default function SelectorPage() {
                   onClick={handleViewEstimate}
                   style={{
                     background: "var(--color-accent)",
-                    color: "#0d1a0d",
+                    color: "#ffffff",
                     border: "none",
                     borderRadius: 20,
                     padding: "8px 20px",
@@ -3384,7 +3384,7 @@ export default function SelectorPage() {
                       border: "none",
                       borderRadius: 8,
                       padding: "12px",
-                      color: "#0d1a0d",
+                      color: "#ffffff",
                       cursor: "pointer",
                       fontSize: 13,
                       fontWeight: 700,
