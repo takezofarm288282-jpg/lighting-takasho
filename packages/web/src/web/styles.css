@@ -1,15 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Noto+Sans+JP:wght@300;400;500;600&family=Oswald:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Noto+Sans+JP:wght@300;400;500;600;700&family=Zen+Old+Mincho:wght@400;700&display=swap');
 @import "tailwindcss";
 
 :root {
-  --color-bg: #0d1a0d;
-  --color-surface: #152015;
-  --color-surface2: #1e2e1e;
-  --color-border: #2d4a2d;
-  --color-accent: #c9a84c;
-  --color-accent2: #e8c96a;
-  --color-text: #f0ede6;
-  --color-text-muted: #9aab9a;
+  --color-bg: #f9f6f2;
+  --color-surface: #ffffff;
+  --color-surface2: #f0ebe4;
+  --color-border: #e0d5c8;
+  --color-accent: #502200;
+  --color-accent2: #7a3a10;
+  --color-text: #333333;
+  --color-text-muted: #888888;
 }
 
 * {
@@ -34,10 +34,10 @@ html, body {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-bg);
+  background: var(--color-surface2);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border);
+  background: #c8b8a8;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
@@ -74,9 +74,9 @@ html, body {
 .stagger-5 { animation-delay: 0.25s; opacity: 0; }
 .stagger-6 { animation-delay: 0.3s; opacity: 0; }
 
-/* Gold gradient text */
+/* Brown gradient text */
 .text-gold-gradient {
-  background: linear-gradient(135deg, #c9a84c, #e8c96a, #c9a84c);
+  background: linear-gradient(135deg, #502200, #7a3a10, #502200);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

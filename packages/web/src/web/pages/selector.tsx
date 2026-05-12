@@ -89,17 +89,17 @@ const makeSpecDefs = (): Record<SpecKey, SpecDef> => ({
     detailVisual: (
       <div style={{ padding: "8px 0" }}>
         {[
-          { rating: "IP44", dust: "4: 直径1mm以上の固体侵入を防ぐ", water: "4: あらゆる方向の水の飛まつを防ぐ", use: "軒下・半屋外向け" },
-          { rating: "IP54", dust: "5: 粉塵の侵入を防ぐ", water: "4: あらゆる方向の水の飛まつを防ぐ", use: "屋外一般向け（標準）" },
-          { rating: "IP65", dust: "6: 完全防塵", water: "5: あらゆる方向からの噴流水を防ぐ", use: "雨ざらし・噴水周辺向け" },
-          { rating: "IP67", dust: "6: 完全防塵", water: "7: 一時的な水没に耐える", use: "地中埋込・水景設備向け" },
+          { rating: "IP44", dust: "防塵: 直径1mm以上の固体侵入を防ぐ", water: "防水: あらゆる方向の水の飛まつを防ぐ", use: "軒下・半屋外向け" },
+          { rating: "IP54", dust: "防塵: 粉塵の侵入を防ぐ", water: "防水: あらゆる方向の水の飛まつを防ぐ", use: "屋外一般向け（標準）" },
+          { rating: "IP65", dust: "防塵: 完全防塵", water: "防水: あらゆる方向からの噴流水を防ぐ", use: "雨ざらし・噴水周辺向け" },
+          { rating: "IP67", dust: "防塵: 完全防塵", water: "防水: 一時的な水没に耐える", use: "地中埋込・水景設備向け" },
         ].map(({ rating, dust, water, use }) => (
           <div key={rating} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 8, padding: "8px 10px", background: "var(--color-surface2)", borderRadius: 8, border: "1px solid var(--color-border)" }}>
             <div style={{ minWidth: 44, fontWeight: 700, fontSize: 13, color: "#4ade80", fontFamily: "'Oswald', sans-serif" }}>{rating}</div>
             <div style={{ flex: 1, fontSize: 11, color: "var(--color-text-muted)", lineHeight: 1.5 }}>
               <div>🛡 {dust}</div>
               <div>💧 {water}</div>
-              <div style={{ color: "var(--color-text)", marginTop: 2 }}>→ {use}</div>
+              <div style={{ color: "var(--color-text)", marginTop: 2, fontWeight: 600 }}>🔰 防水・防塵対応 → {use}</div>
             </div>
           </div>
         ))}
@@ -928,10 +928,14 @@ function TransformerCalculator() {
   const [lightCount, setLightCount] = useState(1);
   const [wattPerLight, setWattPerLight] = useState(5);
   const [voltage, setVoltage] = useState<"24V" | "12V">("24V");
+  const [hoursPerDay, setHoursPerDay] = useState(5);
 
   const totalW = lightCount * wattPerLight;
   // 合計W × 1.4 の安全係数で推奨トランスを決定
   const safeW = totalW * 1.4;
+  // 月額電気代目安 (27円/kWh、31日)
+  const monthlyKwh = (totalW / 1000) * hoursPerDay * 31;
+  const monthlyCost = Math.round(monthlyKwh * 27);
 
   const recommended = TRANSFORMER_PRODUCTS.filter(
     (t) =>
@@ -1006,9 +1010,24 @@ function TransformerCalculator() {
         </div>
       </div>
 
+      {/* 1日の点灯時間 */}
+      <div>
+        <div style={{ fontSize: 12, color: "var(--color-text-muted)", marginBottom: 8, fontWeight: 600 }}>
+          1日の点灯時間：<span style={{ color: "var(--color-accent)", fontSize: 16 }}>{hoursPerDay}</span>時間
+        </div>
+        <input
+          type="range" min={1} max={12} value={hoursPerDay}
+          onChange={e => setHoursPerDay(Number(e.target.value))}
+          style={{ width: "100%", accentColor: "var(--color-accent)" }}
+        />
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--color-text-muted)", marginTop: 2 }}>
+          <span>1時間</span><span>12時間</span>
+        </div>
+      </div>
+
       {/* 計算結果 */}
       <div style={{ background: "var(--color-surface2)", borderRadius: 12, padding: "16px 20px", border: "1px solid var(--color-border)" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 14 }}>
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: 11, color: "var(--color-text-muted)", marginBottom: 4 }}>合計W数</div>
             <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, fontWeight: 700, color: "var(--color-text)" }}>{totalW}<span style={{ fontSize: 13, marginLeft: 2 }}>W</span></div>
@@ -1017,10 +1036,18 @@ function TransformerCalculator() {
             <div style={{ fontSize: 11, color: "var(--color-text-muted)", marginBottom: 4 }}>安全係数 ×1.4</div>
             <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, fontWeight: 700, color: "#fbbf24" }}>{safeW.toFixed(1)}<span style={{ fontSize: 13, marginLeft: 2 }}>W</span></div>
           </div>
-          <div style={{ textAlign: "center" }}>
+          <div style={{ textAlign: "center", borderRight: "1px solid var(--color-border)" }}>
             <div style={{ fontSize: 11, color: "var(--color-text-muted)", marginBottom: 4 }}>必要容量</div>
             <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, fontWeight: 700, color: "var(--color-accent)" }}>{Math.ceil(safeW)}<span style={{ fontSize: 13, marginLeft: 2 }}>W以上</span></div>
           </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 11, color: "var(--color-text-muted)", marginBottom: 4 }}>月の電気料金目安</div>
+            <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, fontWeight: 700, color: "#34d399" }}>¥{monthlyCost.toLocaleString()}</div>
+            <div style={{ fontSize: 10, color: "var(--color-text-muted)", marginTop: 2 }}>約{monthlyKwh.toFixed(1)}kWh/月</div>
+          </div>
+        </div>
+        <div style={{ fontSize: 11, color: "var(--color-text-muted)", marginBottom: 12 }}>
+          ※ 電気料金目安：{hoursPerDay}時間/日 × 31日 × 27円/kWh で算出（概算）
         </div>
 
         {/* 推奨トランス */}
@@ -2250,6 +2277,10 @@ export default function SelectorPage() {
                       {treeProductsData.products.map((product, i) => {
                         const inList = isInEstimate(product.id);
                         const qty = getQuantity(product.id);
+                        const treeFeatures = product.features ? JSON.parse(product.features) as string[] : [];
+                        const TREE_COLOR_NAMES = ["シルバー", "ブラック", "クリア", "ホワイト", "ゴールド", "ブロンズ", "グレー", "アンバー"];
+                        const TREE_COLOR_MAP: Record<string, string> = { シルバー: "#c0c0c0", ブラック: "#222", クリア: "#b8d4e8", ホワイト: "#f5f5f0", ゴールド: "#c9a84c", ブロンズ: "#8b5c2a", グレー: "#888", アンバー: "#e07b00" };
+                        const treeProductColors = TREE_COLOR_NAMES.filter(c => treeFeatures.some((f: string) => f.includes(c)) || product.name.includes(c));
                         return (
                           <div
                             key={product.id}
@@ -2268,6 +2299,17 @@ export default function SelectorPage() {
                               </div>
                               {/* Specs — A+B+C */}
                               <SpecBadgeList product={product as Product & { voltage?: string }} onInfoClick={setActiveSpecKey} />
+                              {treeProductColors.length > 0 && (
+                                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                  <span style={{ fontSize: 10, color: "var(--color-text-muted)", flexShrink: 0 }}>色：</span>
+                                  {treeProductColors.map(c => (
+                                    <div key={c} style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                                      <div style={{ width: 12, height: 12, borderRadius: "50%", background: TREE_COLOR_MAP[c], border: "1px solid var(--color-border)", flexShrink: 0 }} />
+                                      <span style={{ fontSize: 10, color: "var(--color-text-muted)" }}>{c}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                               {product.description && (
                                 <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-muted)", lineHeight: 1.5 }}>{product.description}</p>
                               )}
@@ -2490,6 +2532,10 @@ export default function SelectorPage() {
                       {shapeProductsData?.products.map((product, i) => {
                         const inCart = isInEstimate(product.id);
                         const qty = getQuantity(product.id);
+                        const shapeFeatures = product.features ? JSON.parse(product.features) as string[] : [];
+                        const SHAPE_COLOR_NAMES = ["シルバー", "ブラック", "クリア", "ホワイト", "ゴールド", "ブロンズ", "グレー", "アンバー"];
+                        const SHAPE_COLOR_MAP: Record<string, string> = { シルバー: "#c0c0c0", ブラック: "#222", クリア: "#b8d4e8", ホワイト: "#f5f5f0", ゴールド: "#c9a84c", ブロンズ: "#8b5c2a", グレー: "#888", アンバー: "#e07b00" };
+                        const shapeProductColors = SHAPE_COLOR_NAMES.filter(c => shapeFeatures.some((f: string) => f.includes(c)) || product.name.includes(c));
                         return (
                           <div
                             key={product.id}
@@ -2505,6 +2551,17 @@ export default function SelectorPage() {
                               <div style={{ fontSize: 11, color: "var(--color-text-muted)" }}>{(product as any).modelNo}</div>
                               <h3 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "var(--color-text)", lineHeight: 1.4 }}>{product.name}</h3>
                               <SpecBadgeList product={product as Product & { voltage?: string }} onInfoClick={setActiveSpecKey} />
+                              {shapeProductColors.length > 0 && (
+                                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                  <span style={{ fontSize: 10, color: "var(--color-text-muted)", flexShrink: 0 }}>色：</span>
+                                  {shapeProductColors.map(c => (
+                                    <div key={c} style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                                      <div style={{ width: 12, height: 12, borderRadius: "50%", background: SHAPE_COLOR_MAP[c], border: "1px solid var(--color-border)", flexShrink: 0 }} />
+                                      <span style={{ fontSize: 10, color: "var(--color-text-muted)" }}>{c}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                               {product.description && (
                                 <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-muted)", lineHeight: 1.5 }}>{product.description}</p>
                               )}
@@ -2961,6 +3018,10 @@ export default function SelectorPage() {
                   const inCart = isInEstimate(product.id);
                   const qty = getQuantity(product.id);
                   const features = product.features ? JSON.parse(product.features) as string[] : [];
+                  // 色の種類をfeaturesまたは製品名から抽出
+                  const COLOR_NAMES = ["シルバー", "ブラック", "クリア", "ホワイト", "ゴールド", "ブロンズ", "グレー", "アンバー"];
+                  const COLOR_MAP: Record<string, string> = { シルバー: "#c0c0c0", ブラック: "#222", クリア: "#b8d4e8", ホワイト: "#f5f5f0", ゴールド: "#c9a84c", ブロンズ: "#8b5c2a", グレー: "#888", アンバー: "#e07b00" };
+                  const productColors = COLOR_NAMES.filter(c => features.some(f => f.includes(c)) || product.name.includes(c));
                   return (
                     <div
                       key={product.id}
@@ -3072,9 +3133,22 @@ export default function SelectorPage() {
                         </p>
 
                         {/* Specs — A+B: ラベル付きバッジ＋ツールチップ、info→Cモーダル */}
-                        <div style={{ marginBottom: 12 }}>
+                        <div style={{ marginBottom: 8 }}>
                           <SpecBadgeList product={product as Product & { voltage?: string }} onInfoClick={setActiveSpecKey} />
                         </div>
+
+                        {/* 色の種類 */}
+                        {productColors.length > 0 && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                            <span style={{ fontSize: 10, color: "var(--color-text-muted)", flexShrink: 0 }}>色：</span>
+                            {productColors.map(c => (
+                              <div key={c} style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                                <div style={{ width: 12, height: 12, borderRadius: "50%", background: COLOR_MAP[c], border: "1px solid var(--color-border)", flexShrink: 0 }} />
+                                <span style={{ fontSize: 10, color: "var(--color-text-muted)" }}>{c}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
 
                         {/* Price */}
                         <div style={{ marginBottom: 14 }}>
