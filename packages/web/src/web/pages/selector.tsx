@@ -1757,9 +1757,7 @@ export default function SelectorPage() {
             <h1 style={{ margin: 0, fontFamily: "'Noto Serif JP', serif", fontSize: 20, fontWeight: 700, color: "var(--color-text)" }}>
               ご利用前にお客様情報を<br />ご入力ください
             </h1>
-            <p style={{ margin: "12px 0 0", fontSize: 12, color: "var(--color-text-muted)" }}>
-              見積もり送信時に使用します
-            </p>
+
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
