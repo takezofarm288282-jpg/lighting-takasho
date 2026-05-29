@@ -32,6 +32,8 @@ export interface Product {
   features: string | null;
   beamAngle: number | null;
   reachDistance: number | null;
+  voltage: string | null;
+  maker: string | null;
   category: Category;
 }
 

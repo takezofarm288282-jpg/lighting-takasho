@@ -57,6 +57,7 @@ const app = new Hono()
     const maxReach = c.req.query("maxReach");            // 照射距離 上限 (m)
     const minReach = c.req.query("minReach");
     const voltage = c.req.query("voltage");              // 電圧: "12V" | "24V" | "100V"
+    const maker = c.req.query("maker");                  // メーカー: "TAKASHO" | "LIXIL"
 
     let query = db
       .select({ product: schema.products, category: schema.categories })
@@ -83,6 +84,7 @@ const app = new Hono()
     if (maxReach) conditions.push(lte(schema.products.reachDistance, parseFloat(maxReach)));
     if (minReach) conditions.push(gte(schema.products.reachDistance, parseFloat(minReach)));
     if (voltage) conditions.push(eq(schema.products.voltage, voltage));
+    if (maker) conditions.push(eq(schema.products.maker, maker));
 
     const rows =
       conditions.length > 0

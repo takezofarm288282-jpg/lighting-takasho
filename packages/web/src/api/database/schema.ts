@@ -40,4 +40,5 @@ export const products = sqliteTable("products", {
   beamAngle: integer("beam_angle"),    // 照射角度 (degrees) e.g. 30, 60, 120
   reachDistance: real("reach_distance"), // 照射距離 (meters) e.g. 1.5, 3.0, 5.0
   voltage: text("voltage"),              // 電圧: "12V" | "24V" | "100V"
+  maker: text("maker").default("TAKASHO"), // メーカー: "TAKASHO" | "LIXIL"
 });

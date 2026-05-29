@@ -1588,6 +1588,7 @@ export default function SelectorPage() {
   const [userInfoConfirmed, setUserInfoConfirmed] = useState(() => typeof window !== "undefined" ? !!(localStorage.getItem("userName") && localStorage.getItem("postalCode")) : false);
   const [emailSent, setEmailSent] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
+  const [selectedMaker, setSelectedMaker] = useState<"ALL" | "TAKASHO" | "LIXIL">("ALL");
   const [priceRange, setPriceRange] = useState(PRICE_RANGES[0]);
   const [colorTemp, setColorTemp] = useState("指定なし");
   const [style, setStyle] = useState("指定なし");
@@ -1637,7 +1638,7 @@ export default function SelectorPage() {
   });
 
   const { data: productsData, isLoading: loadingProducts } = useQuery({
-    queryKey: ["products", selectedCategory?.slug, priceRange, colorTemp, style, beamAngle, reachDistance],
+    queryKey: ["products", selectedCategory?.slug, priceRange, colorTemp, style, beamAngle, reachDistance, selectedMaker],
     queryFn: async () => {
       const params: Record<string, string> = {
         category: selectedCategory!.slug,
@@ -1650,6 +1651,7 @@ export default function SelectorPage() {
       if (beamAngle.min > 0) params.minBeamAngle = beamAngle.min.toString();
       if (reachDistance.max < 999) params.maxReach = reachDistance.max.toString();
       if (reachDistance.min > 0) params.minReach = reachDistance.min.toString();
+      if (selectedMaker !== "ALL") params.maker = selectedMaker;
       return (await api.products.$get({ query: params })).json();
     },
     enabled: !!selectedCategory,
@@ -2967,6 +2969,36 @@ export default function SelectorPage() {
               </div>
             </div>
 
+            {/* メーカータブ */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+              {(["ALL", "TAKASHO", "LIXIL"] as const).map((maker) => {
+                const active = selectedMaker === maker;
+                const label = maker === "ALL" ? "すべて" : maker === "TAKASHO" ? "TAKASHO" : "LIXIL 美彩";
+                const accentColor = maker === "LIXIL" ? "#4a9eff" : "var(--color-accent)";
+                return (
+                  <button
+                    key={maker}
+                    onClick={() => setSelectedMaker(maker)}
+                    style={{
+                      padding: "7px 16px",
+                      borderRadius: 20,
+                      border: `1px solid ${active ? accentColor : "var(--color-border)"}`,
+                      background: active ? (maker === "LIXIL" ? "rgba(74,158,255,0.12)" : "rgba(201,168,76,0.15)") : "var(--color-surface)",
+                      color: active ? accentColor : "var(--color-text-muted)",
+                      fontFamily: "'Noto Sans JP', sans-serif",
+                      fontSize: 13,
+                      fontWeight: active ? 700 : 400,
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                      letterSpacing: maker !== "ALL" ? "0.05em" : undefined,
+                    }}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
               <div>
                 <h2 style={{ fontFamily: "'Noto Serif JP', serif", fontSize: 24, fontWeight: 700, margin: "0 0 4px" }}>
@@ -3214,6 +3246,25 @@ export default function SelectorPage() {
                             }}
                           >
                             {qty}
+                          </div>
+                        )}
+                        {product.maker === "LIXIL" && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: 8,
+                              left: 8,
+                              background: "rgba(74,158,255,0.9)",
+                              color: "#fff",
+                              borderRadius: 6,
+                              padding: "2px 8px",
+                              fontSize: 10,
+                              fontWeight: 700,
+                              letterSpacing: "0.08em",
+                              fontFamily: "'Oswald', sans-serif",
+                            }}
+                          >
+                            LIXIL
                           </div>
                         )}
                         {product.catalogPage && (
