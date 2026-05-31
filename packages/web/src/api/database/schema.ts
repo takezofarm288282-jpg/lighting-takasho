@@ -41,4 +41,5 @@ export const products = sqliteTable("products", {
   reachDistance: real("reach_distance"), // 照射距離 (meters) e.g. 1.5, 3.0, 5.0
   voltage: text("voltage"),              // 電圧: "12V" | "24V" | "100V"
   maker: text("maker").default("TAKASHO"), // メーカー: "TAKASHO" | "LIXIL"
+  images: text("images"), // JSON配列 e.g. '["url1","url2","url3"]'
 });

@@ -36,6 +36,8 @@ import {
   ChevronDown,
   Wrench,
   BookMarked,
+  ZoomIn,
+  ExternalLink,
 } from "lucide-react";
 
 // ============================================================
@@ -388,6 +390,356 @@ function SpecBadgeList({
 }
 
 // ============================================================
+// C: ProductDetailModal — 商品詳細モーダル（画像スライダー）
+// ============================================================
+function ProductDetailModal({
+  product,
+  onClose,
+}: {
+  product: Product | null;
+  onClose: () => void;
+}) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+
+  useEffect(() => {
+    if (!product) return;
+    setCurrentIndex(0);
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (lightboxOpen) setLightboxOpen(false);
+        else onClose();
+      }
+      if (e.key === "ArrowLeft") setCurrentIndex(i => Math.max(0, i - 1));
+      if (e.key === "ArrowRight") setCurrentIndex(i => Math.min((images.length - 1), i + 1));
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [product, lightboxOpen]);
+
+  if (!product) return null;
+
+  const images: string[] = (() => {
+    try {
+      const parsed = product.images ? JSON.parse(product.images) : [];
+      return parsed.length > 0 ? parsed : (product.imageUrl ? [product.imageUrl] : []);
+    } catch {
+      return product.imageUrl ? [product.imageUrl] : [];
+    }
+  })();
+
+  const specs = [
+    product.watt != null && { label: "消費電力", value: `${product.watt}W` },
+    product.lumen != null && { label: "光束", value: `${product.lumen}lm` },
+    product.beamAngle != null && { label: "照射角度", value: `${product.beamAngle}°` },
+    product.reachDistance != null && { label: "照射距離", value: `${product.reachDistance}m` },
+    product.colorTemp && { label: "色温度", value: product.colorTemp },
+    product.ipRating && { label: "防水等級", value: product.ipRating },
+    product.voltage && { label: "電圧", value: product.voltage },
+    product.style && { label: "スタイル", value: product.style },
+  ].filter(Boolean) as { label: string; value: string }[];
+
+  const features: string[] = (() => {
+    try { return product.features ? JSON.parse(product.features) : []; }
+    catch { return []; }
+  })();
+
+  const makerColor = product.maker === "LIXIL" ? "#0071C5" : "#2E7D32";
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed", inset: 0,
+          background: "rgba(0,0,0,0.8)",
+          zIndex: 9999,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: 16,
+          backdropFilter: "blur(6px)",
+        }}
+      >
+        <div
+          onClick={e => e.stopPropagation()}
+          style={{
+            background: "var(--color-surface)",
+            borderRadius: 16,
+            width: "100%",
+            maxWidth: 720,
+            maxHeight: "92vh",
+            overflowY: "auto",
+            boxShadow: "0 24px 64px rgba(0,0,0,0.7)",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          {/* Header */}
+          <div style={{
+            padding: "16px 20px 12px",
+            borderBottom: "1px solid var(--color-border)",
+            display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12,
+            position: "sticky", top: 0, background: "var(--color-surface)", zIndex: 1, borderRadius: "16px 16px 0 0",
+          }}>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, color: "#fff",
+                  background: makerColor, borderRadius: 4, padding: "2px 7px", letterSpacing: 1,
+                }}>
+                  {product.maker ?? "TAKASHO"}
+                </span>
+                <span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>{product.modelNo}</span>
+              </div>
+              <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "var(--color-text)", lineHeight: 1.3, fontFamily: "'Noto Serif JP', serif" }}>
+                {product.name}
+              </h2>
+            </div>
+            <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text-muted)", padding: 4, flexShrink: 0 }}>
+              <X size={20} />
+            </button>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+            {/* Image area */}
+            {images.length > 0 && (
+              <div style={{ background: "#111", position: "relative" }}>
+                {/* Main image */}
+                <div
+                  style={{ width: "100%", aspectRatio: "16/9", overflow: "hidden", cursor: "zoom-in", position: "relative" }}
+                  onClick={() => setLightboxOpen(true)}
+                >
+                  <img
+                    src={images[currentIndex]}
+                    alt={`${product.name} ${currentIndex + 1}`}
+                    style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                    onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  />
+                  <div style={{
+                    position: "absolute", bottom: 8, right: 8,
+                    background: "rgba(0,0,0,0.5)", borderRadius: 6, padding: "4px 8px",
+                    display: "flex", alignItems: "center", gap: 4, color: "#fff", fontSize: 11,
+                  }}>
+                    <ZoomIn size={12} /> 拡大
+                  </div>
+                  {/* Prev/Next */}
+                  {images.length > 1 && (
+                    <>
+                      <button
+                        onClick={e => { e.stopPropagation(); setCurrentIndex(i => Math.max(0, i - 1)); }}
+                        style={{
+                          position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)",
+                          background: "rgba(0,0,0,0.5)", border: "none", borderRadius: "50%",
+                          width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center",
+                          cursor: "pointer", color: "#fff", opacity: currentIndex === 0 ? 0.3 : 1,
+                        }}
+                        disabled={currentIndex === 0}
+                      >
+                        <ChevronLeft size={18} />
+                      </button>
+                      <button
+                        onClick={e => { e.stopPropagation(); setCurrentIndex(i => Math.min(images.length - 1, i + 1)); }}
+                        style={{
+                          position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
+                          background: "rgba(0,0,0,0.5)", border: "none", borderRadius: "50%",
+                          width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center",
+                          cursor: "pointer", color: "#fff", opacity: currentIndex === images.length - 1 ? 0.3 : 1,
+                        }}
+                        disabled={currentIndex === images.length - 1}
+                      >
+                        <ChevronRight size={18} />
+                      </button>
+                    </>
+                  )}
+                </div>
+                {/* Thumbnails */}
+                {images.length > 1 && (
+                  <div style={{
+                    display: "flex", gap: 6, padding: "10px 12px", overflowX: "auto",
+                    background: "#0a0a0a",
+                  }}>
+                    {images.map((url, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setCurrentIndex(idx)}
+                        style={{
+                          width: 64, height: 48, flexShrink: 0, borderRadius: 6, overflow: "hidden",
+                          border: `2px solid ${idx === currentIndex ? "var(--color-accent)" : "transparent"}`,
+                          cursor: "pointer", background: "#222", padding: 0,
+                        }}
+                      >
+                        <img
+                          src={url}
+                          alt={`サムネイル ${idx + 1}`}
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          onError={e => { (e.target as HTMLImageElement).style.opacity = "0.3"; }}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {/* Counter */}
+                {images.length > 1 && (
+                  <div style={{
+                    position: "absolute", top: 10, left: 10,
+                    background: "rgba(0,0,0,0.6)", color: "#fff",
+                    fontSize: 11, borderRadius: 10, padding: "3px 9px", fontWeight: 600,
+                  }}>
+                    {currentIndex + 1} / {images.length}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Details */}
+            <div style={{ padding: "20px 20px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
+              {/* Price */}
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                <span style={{ fontSize: 26, fontWeight: 800, color: "var(--color-accent)", fontFamily: "'Noto Serif JP', serif" }}>
+                  ¥{product.price.toLocaleString()}
+                </span>
+                <span style={{ fontSize: 12, color: "var(--color-text-muted)" }}>（税別）</span>
+              </div>
+
+              {/* Description */}
+              {product.description && (
+                <p style={{ margin: 0, fontSize: 13, color: "var(--color-text-muted)", lineHeight: 1.7 }}>
+                  {product.description}
+                </p>
+              )}
+
+              {/* Spec table */}
+              {specs.length > 0 && (
+                <div>
+                  <h4 style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "var(--color-text-muted)", letterSpacing: 1, textTransform: "uppercase" }}>スペック</h4>
+                  <div style={{
+                    display: "grid", gridTemplateColumns: "1fr 1fr",
+                    gap: "1px", background: "var(--color-border)",
+                    borderRadius: 8, overflow: "hidden", border: "1px solid var(--color-border)",
+                  }}>
+                    {specs.map(s => (
+                      <div key={s.label} style={{ background: "var(--color-surface2)", padding: "10px 12px" }}>
+                        <div style={{ fontSize: 10, color: "var(--color-text-muted)", marginBottom: 2 }}>{s.label}</div>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text)" }}>{s.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Features */}
+              {features.length > 0 && (
+                <div>
+                  <h4 style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "var(--color-text-muted)", letterSpacing: 1, textTransform: "uppercase" }}>特長</h4>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {features.map((f, i) => (
+                      <span key={i} style={{
+                        fontSize: 11, padding: "4px 10px", borderRadius: 20,
+                        background: "var(--color-surface2)", color: "var(--color-text)",
+                        border: "1px solid var(--color-border)",
+                      }}>{f}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Beam angle visual */}
+              {product.beamAngle != null && product.reachDistance != null && (
+                <div style={{ background: "var(--color-surface2)", borderRadius: 10, padding: 16, border: "1px solid var(--color-border)" }}>
+                  <h4 style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 700, color: "var(--color-text-muted)", letterSpacing: 1 }}>照射イメージ</h4>
+                  <svg viewBox="0 0 200 120" style={{ width: "100%", maxWidth: 280, display: "block", margin: "0 auto" }}>
+                    {/* Ground */}
+                    <line x1="20" y1="100" x2="180" y2="100" stroke="var(--color-border)" strokeWidth="1.5" />
+                    {/* Light source */}
+                    <circle cx="100" cy="10" r="5" fill={makerColor} />
+                    {/* Beam lines */}
+                    {(() => {
+                      const halfAngle = Math.min(product.beamAngle / 2, 80);
+                      const rad = (halfAngle * Math.PI) / 180;
+                      const dist = 90;
+                      const lx = 100 - Math.sin(rad) * dist;
+                      const rx = 100 + Math.sin(rad) * dist;
+                      const y = 10 + Math.cos(rad) * dist;
+                      const clampedY = Math.min(y, 100);
+                      return (
+                        <>
+                          <path d={`M100,10 L${lx.toFixed(1)},${clampedY.toFixed(1)} L${rx.toFixed(1)},${clampedY.toFixed(1)} Z`}
+                            fill={`${makerColor}22`} stroke={makerColor} strokeWidth="1" />
+                          <text x="100" y="115" textAnchor="middle" fill="var(--color-text-muted)" fontSize="9">
+                            {product.beamAngle}° / {product.reachDistance}m先
+                          </text>
+                        </>
+                      );
+                    })()}
+                  </svg>
+                </div>
+              )}
+
+              {/* Catalog page */}
+              {product.catalogPage && (
+                <div style={{ fontSize: 12, color: "var(--color-text-muted)", display: "flex", alignItems: "center", gap: 4 }}>
+                  <BookOpen size={13} />
+                  カタログ P.{product.catalogPage}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Lightbox */}
+      {lightboxOpen && images.length > 0 && (
+        <div
+          onClick={() => setLightboxOpen(false)}
+          style={{
+            position: "fixed", inset: 0, background: "rgba(0,0,0,0.95)",
+            zIndex: 10000, display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          <img
+            src={images[currentIndex]}
+            alt={product.name}
+            style={{ maxWidth: "95vw", maxHeight: "95vh", objectFit: "contain", borderRadius: 8 }}
+          />
+          <button
+            onClick={e => { e.stopPropagation(); setLightboxOpen(false); }}
+            style={{
+              position: "absolute", top: 16, right: 16,
+              background: "rgba(255,255,255,0.1)", border: "none", borderRadius: "50%",
+              width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", color: "#fff",
+            }}
+          >
+            <X size={20} />
+          </button>
+          {images.length > 1 && (
+            <>
+              <button
+                onClick={e => { e.stopPropagation(); setCurrentIndex(i => Math.max(0, i - 1)); }}
+                style={{
+                  position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)",
+                  background: "rgba(255,255,255,0.1)", border: "none", borderRadius: "50%",
+                  width: 48, height: 48, display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", color: "#fff", opacity: currentIndex === 0 ? 0.3 : 1,
+                }}
+              ><ChevronLeft size={24} /></button>
+              <button
+                onClick={e => { e.stopPropagation(); setCurrentIndex(i => Math.min(images.length - 1, i + 1)); }}
+                style={{
+                  position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)",
+                  background: "rgba(255,255,255,0.1)", border: "none", borderRadius: "50%",
+                  width: 48, height: 48, display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", color: "#fff", opacity: currentIndex === images.length - 1 ? 0.3 : 1,
+                }}
+              ><ChevronRight size={24} /></button>
+            </>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
 // C: SpecDetailModal — 図解モーダル
 // ============================================================
 function SpecDetailModal({
@@ -1615,6 +1967,9 @@ export default function SelectorPage() {
   // C: スペック図解モーダル
   const [activeSpecKey, setActiveSpecKey] = useState<SpecKey | null>(null);
 
+  // 商品詳細モーダル
+  const [detailProduct, setDetailProduct] = useState<Product | null>(null);
+
   // 形状フロー
   const [shapeStep, setShapeStep] = useState<ShapeStep>("select");
   const [selectedShape, setSelectedShape] = useState<typeof SHAPE_CATEGORIES[number] | null>(null);
@@ -2404,12 +2759,18 @@ export default function SelectorPage() {
                             style={{ background: "var(--color-surface)", border: `1px solid ${inList ? "var(--color-accent)" : "var(--color-border)"}`, borderRadius: 12, overflow: "hidden", display: "flex", flexDirection: "column", transition: "all 0.2s" }}
                           >
                             {product.imageUrl && (
-                              <div style={{ height: 160, overflow: "hidden", background: "var(--color-surface2)" }}>
+                              <div
+                                style={{ height: 160, overflow: "hidden", background: "var(--color-surface2)", cursor: "pointer", position: "relative" }}
+                                onClick={() => setDetailProduct(product as Product)}
+                              >
                                 <img src={product.imageUrl} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                <div style={{ position: "absolute", bottom: 6, right: 6, background: "rgba(0,0,0,0.55)", borderRadius: 6, padding: "3px 7px", display: "flex", alignItems: "center", gap: 3, color: "#fff", fontSize: 10 }}>
+                                  <ZoomIn size={11} /> 詳細
+                                </div>
                               </div>
                             )}
                             <div style={{ padding: 16, flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
-                              <h3 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "var(--color-text)", lineHeight: 1.4 }}>{product.name}</h3>
+                              <h3 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "var(--color-text)", lineHeight: 1.4, cursor: "pointer" }} onClick={() => setDetailProduct(product as Product)}>{product.name}</h3>
                               <div style={{ fontSize: 18, fontWeight: 700, color: "var(--color-accent)", fontFamily: "'Noto Serif JP', serif" }}>
                                 ¥{product.price.toLocaleString()}
                               </div>
@@ -2659,13 +3020,19 @@ export default function SelectorPage() {
                             style={{ background: "var(--color-surface)", border: `1px solid ${inCart ? selectedShape.color : "var(--color-border)"}`, borderRadius: 12, overflow: "hidden", display: "flex", flexDirection: "column", transition: "all 0.2s" }}
                           >
                             {product.imageUrl && (
-                              <div style={{ height: 160, overflow: "hidden", background: "var(--color-surface2)" }}>
+                              <div
+                                style={{ height: 160, overflow: "hidden", background: "var(--color-surface2)", cursor: "pointer", position: "relative" }}
+                                onClick={() => setDetailProduct(product as Product)}
+                              >
                                 <img src={product.imageUrl} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                <div style={{ position: "absolute", bottom: 6, right: 6, background: "rgba(0,0,0,0.55)", borderRadius: 6, padding: "3px 7px", display: "flex", alignItems: "center", gap: 3, color: "#fff", fontSize: 10 }}>
+                                  <ZoomIn size={11} /> 詳細
+                                </div>
                               </div>
                             )}
                             <div style={{ padding: 16, flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
                               <div style={{ fontSize: 11, color: "var(--color-text-muted)" }}>{(product as any).modelNo}</div>
-                              <h3 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "var(--color-text)", lineHeight: 1.4 }}>{product.name}</h3>
+                              <h3 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "var(--color-text)", lineHeight: 1.4, cursor: "pointer" }} onClick={() => setDetailProduct(product as Product)}>{product.name}</h3>
                               <SpecBadgeList product={product as Product & { voltage?: string }} onInfoClick={setActiveSpecKey} />
                               {shapeProductColors.length > 0 && (
                                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -3685,6 +4052,9 @@ export default function SelectorPage() {
 
       {/* C: スペック図解モーダル */}
       <SpecDetailModal specKey={activeSpecKey} onClose={() => setActiveSpecKey(null)} />
+
+      {/* 商品詳細モーダル */}
+      <ProductDetailModal product={detailProduct} onClose={() => setDetailProduct(null)} />
     </div>
   );
 }

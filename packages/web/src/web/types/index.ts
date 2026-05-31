@@ -34,6 +34,7 @@ export interface Product {
   reachDistance: number | null;
   voltage: string | null;
   maker: string | null;
+  images: string | null;
   category: Category;
 }
 
