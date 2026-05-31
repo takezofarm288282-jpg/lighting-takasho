@@ -225,6 +225,129 @@ const app = new Hono()
     });
 
     return c.json({ ok: true }, 200);
+  })
+
+  // Generate PDF estimate
+  .post("/generate-pdf", async (c) => {
+    const { name, postalCode, items, total } = await c.req.json<{
+      name: string;
+      postalCode: string;
+      items: { product: { id: number; name: string; modelNo: string; price: number }; quantity: number; subtotal: number }[];
+      total: number;
+    }>();
+
+    const tax = Math.floor(total * 0.1);
+    const totalWithTax = Math.floor(total * 1.1);
+    const now = new Date();
+    const dateStr = now.toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" });
+
+    const itemRows = items.map((item) =>
+      `<tr>
+        <td style="padding:10px 8px;border-bottom:1px solid #eeeeee;">
+          <div style="font-size:13px;font-weight:600;color:#1e1e1e;">${item.product.name}</div>
+          <div style="font-size:11px;color:#999999;margin-top:2px;">${item.product.modelNo || ""}</div>
+        </td>
+        <td style="padding:10px 8px;border-bottom:1px solid #eeeeee;text-align:right;white-space:nowrap;">¥${item.product.price.toLocaleString("ja-JP")}</td>
+        <td style="padding:10px 8px;border-bottom:1px solid #eeeeee;text-align:center;">${item.quantity}</td>
+        <td style="padding:10px 8px;border-bottom:1px solid #eeeeee;text-align:right;font-weight:700;white-space:nowrap;">¥${item.subtotal.toLocaleString("ja-JP")}</td>
+      </tr>`
+    ).join("");
+
+    const html = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+    background: #ffffff;
+    color: #1e1e1e;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .page { width: 794px; padding: 0 60px 60px; }
+  .header { background: #1e1e1e; color: #ffffff; margin: 0 -60px 40px; padding: 14px 60px; display: flex; justify-content: space-between; align-items: center; }
+  .header-title { font-size: 13px; font-weight: 700; letter-spacing: 0.05em; }
+  .header-date { font-size: 12px; color: #aaaaaa; }
+  h1 { text-align: center; font-size: 26px; font-weight: 700; letter-spacing: 0.15em; margin: 0 0 10px; }
+  .gold-line { height: 2px; background: #c8a050; margin-bottom: 28px; }
+  .customer-info { font-size: 13px; color: #555555; margin-bottom: 24px; }
+  .customer-info div { margin-bottom: 4px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+  thead tr { background: #f5f5f5; }
+  th { padding: 10px 8px; text-align: left; font-size: 12px; font-weight: 700; color: #444444; border-bottom: 2px solid #e0e0e0; }
+  th.right { text-align: right; }
+  th.center { text-align: center; }
+  .total-box { background: #faf7ee; border: 1.5px solid #c8a050; border-radius: 10px; padding: 20px 24px; margin-bottom: 20px; }
+  .total-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: #666666; }
+  .total-row.border { padding-bottom: 14px; border-bottom: 1px solid #e0d0a0; margin-bottom: 14px; }
+  .total-final { display: flex; justify-content: space-between; align-items: center; }
+  .total-label { font-size: 16px; font-weight: 700; color: #1e1e1e; }
+  .total-amount { font-size: 26px; font-weight: 700; color: #b4781e; }
+  .note { font-size: 11px; color: #aaaaaa; text-align: center; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <span class="header-title">TAKASHO / LIXIL ガーデンライト</span>
+    <span class="header-date">${dateStr}</span>
+  </div>
+  <h1>お 見 積 書</h1>
+  <div class="gold-line"></div>
+  <div class="customer-info">
+    ${name ? `<div>お名前：${name} 様</div>` : ""}
+    ${postalCode ? `<div>郵便番号：〒${postalCode}</div>` : ""}
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>商品名 / 型番</th>
+        <th class="right">単価</th>
+        <th class="center">数量</th>
+        <th class="right">小計</th>
+      </tr>
+    </thead>
+    <tbody>${itemRows}</tbody>
+  </table>
+  <div class="total-box">
+    <div class="total-row">
+      <span>小計（税別）</span>
+      <span>¥${total.toLocaleString("ja-JP")}</span>
+    </div>
+    <div class="total-row border">
+      <span>消費税（10%）</span>
+      <span>¥${tax.toLocaleString("ja-JP")}</span>
+    </div>
+    <div class="total-final">
+      <span class="total-label">合計（税込）</span>
+      <span class="total-amount">¥${totalWithTax.toLocaleString("ja-JP")}</span>
+    </div>
+  </div>
+  <p class="note">※ 工事費・配線費用は含まれていません。別途お見積もりが必要です。</p>
+</div>
+</body>
+</html>`;
+
+    const puppeteer = await import("puppeteer-core");
+    const browser = await puppeteer.default.launch({
+      executablePath: "/usr/bin/google-chrome",
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+    });
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "networkidle0" });
+    const pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
+    await browser.close();
+
+    return new Response(pdfBuffer, {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent("見積書")}_${now.toISOString().slice(0,10).replace(/-/g,"")}.pdf`,
+      },
+    });
   });
 
 export type AppType = typeof app;

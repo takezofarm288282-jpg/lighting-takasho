@@ -1,6 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
-import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
+
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "../lib/api";
@@ -2064,120 +2063,27 @@ export default function SelectorPage() {
     if (!estimateResult || pdfDownloading) return;
     setPdfDownloading(true);
     try {
-      const now = new Date();
-      const dateStr = now.toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" });
-      const tax = Math.floor(estimateResult.total * 0.1);
-      const total = Math.floor(estimateResult.total * 1.1);
-
-      // 日本語対応のPDF用HTMLを隠しdivで生成
-      const container = document.createElement("div");
-      container.style.cssText = `
-        position: fixed; left: -9999px; top: 0;
-        width: 794px; background: #ffffff; padding: 48px 60px;
-        font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
-        color: #1e1e1e; font-size: 14px; line-height: 1.6;
-        box-sizing: border-box;
-      `;
-
-      const itemsHTML = estimateResult.items.map(item => `
-        <tr style="border-bottom: 1px solid #eeeeee;">
-          <td style="padding: 10px 8px;">
-            <div style="font-size: 13px; font-weight: 600; color: #1e1e1e;">${item.product.name}</div>
-            <div style="font-size: 11px; color: #999999; margin-top: 2px;">${item.product.modelNo || ""}</div>
-          </td>
-          <td style="padding: 10px 8px; text-align: right; white-space: nowrap;">¥${item.product.price.toLocaleString("ja-JP")}</td>
-          <td style="padding: 10px 8px; text-align: center;">${item.quantity}</td>
-          <td style="padding: 10px 8px; text-align: right; font-weight: 700; white-space: nowrap;">¥${item.subtotal.toLocaleString("ja-JP")}</td>
-        </tr>
-      `).join("");
-
-      container.innerHTML = `
-        <div style="background: #1e1e1e; color: #ffffff; margin: -48px -60px 40px; padding: 14px 60px; display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-size: 13px; font-weight: 700; letter-spacing: 0.05em;">TAKASHO / LIXIL ガーデンライト</span>
-          <span style="font-size: 12px; color: #aaaaaa;">${dateStr}</span>
-        </div>
-
-        <h1 style="text-align: center; font-size: 26px; font-weight: 700; letter-spacing: 0.15em; margin: 0 0 10px;">お 見 積 書</h1>
-        <div style="height: 2px; background: #c8a050; margin-bottom: 28px;"></div>
-
-        ${userName ? `<div style="font-size: 13px; color: #555; margin-bottom: 4px;">お名前：${userName} 様</div>` : ""}
-        ${postalCode ? `<div style="font-size: 13px; color: #555; margin-bottom: 20px;">郵便番号：〒${postalCode}</div>` : ""}
-
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
-          <thead>
-            <tr style="background: #f5f5f5;">
-              <th style="padding: 10px 8px; text-align: left; font-size: 12px; font-weight: 700; color: #444; border-bottom: 2px solid #e0e0e0;">商品名 / 型番</th>
-              <th style="padding: 10px 8px; text-align: right; font-size: 12px; font-weight: 700; color: #444; border-bottom: 2px solid #e0e0e0; white-space: nowrap;">単価</th>
-              <th style="padding: 10px 8px; text-align: center; font-size: 12px; font-weight: 700; color: #444; border-bottom: 2px solid #e0e0e0;">数量</th>
-              <th style="padding: 10px 8px; text-align: right; font-size: 12px; font-weight: 700; color: #444; border-bottom: 2px solid #e0e0e0; white-space: nowrap;">小計</th>
-            </tr>
-          </thead>
-          <tbody>${itemsHTML}</tbody>
-        </table>
-
-        <div style="background: #faf7ee; border: 1.5px solid #c8a050; border-radius: 10px; padding: 20px 24px; margin-bottom: 20px;">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-            <span style="font-size: 13px; color: #666;">小計（税別）</span>
-            <span style="font-size: 14px;">¥${estimateResult.total.toLocaleString("ja-JP")}</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; padding-bottom: 14px; border-bottom: 1px solid #e0d0a0; margin-bottom: 14px;">
-            <span style="font-size: 13px; color: #666;">消費税（10%）</span>
-            <span style="font-size: 14px;">¥${tax.toLocaleString("ja-JP")}</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 16px; font-weight: 700;">合計（税込）</span>
-            <span style="font-size: 24px; font-weight: 700; color: #b4781e;">¥${total.toLocaleString("ja-JP")}</span>
-          </div>
-        </div>
-
-        <p style="font-size: 11px; color: #aaa; text-align: center; margin: 0;">
-          ※ 工事費・配線費用は含まれていません。別途お見積もりが必要です。
-        </p>
-      `;
-
-      document.body.appendChild(container);
-
-      const canvas = await html2canvas(container, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        width: 794,
+      const res = await fetch("/api/generate-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: userName,
+          postalCode,
+          items: estimateResult.items,
+          total: estimateResult.total,
+        }),
       });
-
-      document.body.removeChild(container);
-
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-      const pdfW = 210;
-      const pdfH = (canvas.height * pdfW) / canvas.width;
-
-      // 複数ページ対応
-      const pageHeight = 297;
-      if (pdfH <= pageHeight) {
-        pdf.addImage(imgData, "PNG", 0, 0, pdfW, pdfH);
-      } else {
-        let remaining = canvas.height;
-        let srcY = 0;
-        const sliceH = Math.floor((canvas.width * pageHeight) / pdfW);
-        let first = true;
-        while (remaining > 0) {
-          if (!first) pdf.addPage();
-          first = false;
-          const sliceCanvas = document.createElement("canvas");
-          sliceCanvas.width = canvas.width;
-          sliceCanvas.height = Math.min(sliceH, remaining);
-          const ctx = sliceCanvas.getContext("2d")!;
-          ctx.drawImage(canvas, 0, srcY, canvas.width, sliceCanvas.height, 0, 0, canvas.width, sliceCanvas.height);
-          const sliceData = sliceCanvas.toDataURL("image/png");
-          const slicePdfH = (sliceCanvas.height * pdfW) / canvas.width;
-          pdf.addImage(sliceData, "PNG", 0, 0, pdfW, slicePdfH);
-          srcY += sliceH;
-          remaining -= sliceH;
-        }
-      }
-
-      const fileDateStr = now.toISOString().slice(0, 10).replace(/-/g, "");
-      pdf.save(`見積書_${fileDateStr}.pdf`);
+      if (!res.ok) throw new Error("PDF生成失敗");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const now = new Date();
+      a.href = url;
+      a.download = `見積書_${now.toISOString().slice(0, 10).replace(/-/g, "")}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error(e);
     } finally {
       setPdfDownloading(false);
     }
