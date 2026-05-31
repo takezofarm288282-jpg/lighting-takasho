@@ -1,4 +1,5 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import { jsPDF } from "jspdf";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "../lib/api";
@@ -1940,6 +1941,7 @@ export default function SelectorPage() {
   const [userInfoConfirmed, setUserInfoConfirmed] = useState(() => typeof window !== "undefined" ? !!(localStorage.getItem("userName") && localStorage.getItem("postalCode")) : false);
   const [emailSent, setEmailSent] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
+  const [pdfDownloading, setPdfDownloading] = useState(false);
   const [selectedMaker, setSelectedMaker] = useState<"ALL" | "TAKASHO" | "LIXIL">("ALL");
   const [priceRange, setPriceRange] = useState(PRICE_RANGES[0]);
   const [colorTemp, setColorTemp] = useState("指定なし");
@@ -2056,6 +2058,148 @@ export default function SelectorPage() {
       setEstimateResult(data.estimate as any);
     },
   });
+
+  const downloadEstimatePDF = useCallback(async () => {
+    if (!estimateResult || pdfDownloading) return;
+    setPdfDownloading(true);
+    try {
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageW = 210;
+      const margin = 20;
+      const contentW = pageW - margin * 2;
+      let y = 20;
+
+      // --- ヘッダー ---
+      doc.setFillColor(30, 30, 30);
+      doc.rect(0, 0, pageW, 14, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.text("TAKASHO / LIXIL  ガーデンライト", margin, 9);
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      const now = new Date();
+      doc.text(now.toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" }), pageW - margin, 9, { align: "right" });
+
+      y = 28;
+      doc.setTextColor(30, 30, 30);
+      doc.setFontSize(18);
+      doc.setFont("helvetica", "bold");
+      doc.text("お 見 積 書", pageW / 2, y, { align: "center" });
+
+      y += 10;
+      doc.setLineWidth(0.5);
+      doc.setDrawColor(200, 160, 80);
+      doc.line(margin, y, pageW - margin, y);
+
+      // --- 顧客情報 ---
+      y += 8;
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(80, 80, 80);
+      if (userName) {
+        doc.text(`お名前: ${userName} 様`, margin, y);
+        y += 6;
+      }
+      if (postalCode) {
+        doc.text(`郵便番号: 〒${postalCode}`, margin, y);
+        y += 6;
+      }
+
+      y += 4;
+      doc.setDrawColor(220, 220, 220);
+      doc.setLineWidth(0.3);
+      doc.line(margin, y, pageW - margin, y);
+      y += 8;
+
+      // --- 商品ヘッダー行 ---
+      doc.setFillColor(245, 245, 245);
+      doc.rect(margin, y - 4, contentW, 8, "F");
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(60, 60, 60);
+      doc.text("商品名 / 型番", margin + 2, y);
+      doc.text("単価", margin + contentW * 0.62, y, { align: "right" });
+      doc.text("数量", margin + contentW * 0.72, y, { align: "right" });
+      doc.text("小計", margin + contentW, y, { align: "right" });
+      y += 8;
+
+      // --- 商品行 ---
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      for (const item of estimateResult.items) {
+        if (y > 260) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.setTextColor(30, 30, 30);
+        // 商品名（長い場合は切る）
+        const nameStr = item.product.name.length > 30 ? item.product.name.slice(0, 29) + "…" : item.product.name;
+        doc.text(nameStr, margin + 2, y);
+        doc.setTextColor(120, 120, 120);
+        doc.setFontSize(7);
+        doc.text(item.product.modelNo || "", margin + 2, y + 4);
+        doc.setFontSize(8);
+        doc.setTextColor(30, 30, 30);
+        doc.text(`¥${item.product.price.toLocaleString("ja-JP")}`, margin + contentW * 0.62, y, { align: "right" });
+        doc.text(`${item.quantity}`, margin + contentW * 0.72, y, { align: "right" });
+        doc.setFont("helvetica", "bold");
+        doc.text(`¥${item.subtotal.toLocaleString("ja-JP")}`, margin + contentW, y, { align: "right" });
+        doc.setFont("helvetica", "normal");
+
+        y += 10;
+        doc.setDrawColor(235, 235, 235);
+        doc.setLineWidth(0.2);
+        doc.line(margin, y - 2, pageW - margin, y - 2);
+      }
+
+      // --- 合計 ---
+      y += 4;
+      doc.setFillColor(248, 244, 236);
+      doc.rect(margin, y - 4, contentW, 28, "F");
+      doc.setDrawColor(200, 160, 80);
+      doc.setLineWidth(0.5);
+      doc.rect(margin, y - 4, contentW, 28, "S");
+
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(80, 80, 80);
+      doc.text("小計（税別）", margin + 4, y + 2);
+      doc.text(`¥${estimateResult.total.toLocaleString("ja-JP")}`, margin + contentW - 4, y + 2, { align: "right" });
+
+      const tax = Math.floor(estimateResult.total * 0.1);
+      doc.text("消費税（10%）", margin + 4, y + 10);
+      doc.text(`¥${tax.toLocaleString("ja-JP")}`, margin + contentW - 4, y + 10, { align: "right" });
+
+      const total = Math.floor(estimateResult.total * 1.1);
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(30, 30, 30);
+      doc.text("合計（税込）", margin + 4, y + 20);
+      doc.setTextColor(180, 120, 30);
+      doc.text(`¥${total.toLocaleString("ja-JP")}`, margin + contentW - 4, y + 20, { align: "right" });
+
+      y += 36;
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(150, 150, 150);
+      doc.text("※ 工事費・配線費用は含まれていません。別途お見積もりが必要です。", margin, y);
+
+      // --- フッター ---
+      const pageCount = (doc as any).internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(7);
+        doc.setTextColor(180, 180, 180);
+        doc.text(`${i} / ${pageCount}`, pageW / 2, 290, { align: "center" });
+      }
+
+      const dateStr = now.toISOString().slice(0, 10).replace(/-/g, "");
+      doc.save(`見積書_${dateStr}.pdf`);
+    } finally {
+      setPdfDownloading(false);
+    }
+  }, [estimateResult, pdfDownloading, userName, postalCode]);
 
   const handleLocationSelect = (loc: Location) => {
     setSelectedLocation(loc);
@@ -3965,8 +4109,35 @@ export default function SelectorPage() {
                   ※ 工事費・配線費用は含まれていません。別途お見積もりが必要です。
                 </p>
 
-                {/* Send estimate button */}
+                {/* PDF download button */}
                 <div style={{ marginTop: 16 }}>
+                  <button
+                    onClick={downloadEstimatePDF}
+                    disabled={pdfDownloading}
+                    style={{
+                      width: "100%",
+                      padding: "14px",
+                      background: "var(--color-accent)",
+                      border: "none",
+                      borderRadius: 8,
+                      color: "#ffffff",
+                      cursor: pdfDownloading ? "wait" : "pointer",
+                      fontSize: 14,
+                      fontWeight: 700,
+                      fontFamily: "'Noto Sans JP', sans-serif",
+                      transition: "background 0.3s",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
+                    }}
+                  >
+                    {pdfDownloading ? "生成中..." : "📄 PDFをダウンロード"}
+                  </button>
+                </div>
+
+                {/* Send estimate button */}
+                <div style={{ marginTop: 10 }}>
                   <button
                     onClick={async () => {
                       if (emailSending || emailSent) return;
@@ -3993,16 +4164,16 @@ export default function SelectorPage() {
                     disabled={emailSending}
                     style={{
                       width: "100%",
-                      padding: "14px",
-                      background: emailSent ? "#2a7a4f" : "var(--color-accent)",
-                      border: "none",
+                      padding: "12px",
+                      background: "none",
+                      border: `1px solid ${emailSent ? "#2a7a4f" : "var(--color-border)"}`,
                       borderRadius: 8,
-                      color: "#ffffff",
+                      color: emailSent ? "#2a7a4f" : "var(--color-text-muted)",
                       cursor: emailSending ? "wait" : "pointer",
-                      fontSize: 14,
-                      fontWeight: 700,
+                      fontSize: 13,
+                      fontWeight: 600,
                       fontFamily: "'Noto Sans JP', sans-serif",
-                      transition: "background 0.3s",
+                      transition: "all 0.3s",
                     }}
                   >
                     {emailSent ? "✓ 見積を送信しました" : emailSending ? "送信中..." : "この見積を担当者に送る"}
