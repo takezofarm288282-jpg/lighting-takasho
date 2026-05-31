@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "../lib/api";
@@ -2063,139 +2064,120 @@ export default function SelectorPage() {
     if (!estimateResult || pdfDownloading) return;
     setPdfDownloading(true);
     try {
-      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-      const pageW = 210;
-      const margin = 20;
-      const contentW = pageW - margin * 2;
-      let y = 20;
-
-      // --- ヘッダー ---
-      doc.setFillColor(30, 30, 30);
-      doc.rect(0, 0, pageW, 14, "F");
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "bold");
-      doc.text("TAKASHO / LIXIL  ガーデンライト", margin, 9);
-      doc.setFontSize(8);
-      doc.setFont("helvetica", "normal");
       const now = new Date();
-      doc.text(now.toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" }), pageW - margin, 9, { align: "right" });
-
-      y = 28;
-      doc.setTextColor(30, 30, 30);
-      doc.setFontSize(18);
-      doc.setFont("helvetica", "bold");
-      doc.text("お 見 積 書", pageW / 2, y, { align: "center" });
-
-      y += 10;
-      doc.setLineWidth(0.5);
-      doc.setDrawColor(200, 160, 80);
-      doc.line(margin, y, pageW - margin, y);
-
-      // --- 顧客情報 ---
-      y += 8;
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(80, 80, 80);
-      if (userName) {
-        doc.text(`お名前: ${userName} 様`, margin, y);
-        y += 6;
-      }
-      if (postalCode) {
-        doc.text(`郵便番号: 〒${postalCode}`, margin, y);
-        y += 6;
-      }
-
-      y += 4;
-      doc.setDrawColor(220, 220, 220);
-      doc.setLineWidth(0.3);
-      doc.line(margin, y, pageW - margin, y);
-      y += 8;
-
-      // --- 商品ヘッダー行 ---
-      doc.setFillColor(245, 245, 245);
-      doc.rect(margin, y - 4, contentW, 8, "F");
-      doc.setFontSize(8);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(60, 60, 60);
-      doc.text("商品名 / 型番", margin + 2, y);
-      doc.text("単価", margin + contentW * 0.62, y, { align: "right" });
-      doc.text("数量", margin + contentW * 0.72, y, { align: "right" });
-      doc.text("小計", margin + contentW, y, { align: "right" });
-      y += 8;
-
-      // --- 商品行 ---
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8);
-      for (const item of estimateResult.items) {
-        if (y > 260) {
-          doc.addPage();
-          y = 20;
-        }
-        doc.setTextColor(30, 30, 30);
-        // 商品名（長い場合は切る）
-        const nameStr = item.product.name.length > 30 ? item.product.name.slice(0, 29) + "…" : item.product.name;
-        doc.text(nameStr, margin + 2, y);
-        doc.setTextColor(120, 120, 120);
-        doc.setFontSize(7);
-        doc.text(item.product.modelNo || "", margin + 2, y + 4);
-        doc.setFontSize(8);
-        doc.setTextColor(30, 30, 30);
-        doc.text(`¥${item.product.price.toLocaleString("ja-JP")}`, margin + contentW * 0.62, y, { align: "right" });
-        doc.text(`${item.quantity}`, margin + contentW * 0.72, y, { align: "right" });
-        doc.setFont("helvetica", "bold");
-        doc.text(`¥${item.subtotal.toLocaleString("ja-JP")}`, margin + contentW, y, { align: "right" });
-        doc.setFont("helvetica", "normal");
-
-        y += 10;
-        doc.setDrawColor(235, 235, 235);
-        doc.setLineWidth(0.2);
-        doc.line(margin, y - 2, pageW - margin, y - 2);
-      }
-
-      // --- 合計 ---
-      y += 4;
-      doc.setFillColor(248, 244, 236);
-      doc.rect(margin, y - 4, contentW, 28, "F");
-      doc.setDrawColor(200, 160, 80);
-      doc.setLineWidth(0.5);
-      doc.rect(margin, y - 4, contentW, 28, "S");
-
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(80, 80, 80);
-      doc.text("小計（税別）", margin + 4, y + 2);
-      doc.text(`¥${estimateResult.total.toLocaleString("ja-JP")}`, margin + contentW - 4, y + 2, { align: "right" });
-
+      const dateStr = now.toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" });
       const tax = Math.floor(estimateResult.total * 0.1);
-      doc.text("消費税（10%）", margin + 4, y + 10);
-      doc.text(`¥${tax.toLocaleString("ja-JP")}`, margin + contentW - 4, y + 10, { align: "right" });
-
       const total = Math.floor(estimateResult.total * 1.1);
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(30, 30, 30);
-      doc.text("合計（税込）", margin + 4, y + 20);
-      doc.setTextColor(180, 120, 30);
-      doc.text(`¥${total.toLocaleString("ja-JP")}`, margin + contentW - 4, y + 20, { align: "right" });
 
-      y += 36;
-      doc.setFontSize(7);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(150, 150, 150);
-      doc.text("※ 工事費・配線費用は含まれていません。別途お見積もりが必要です。", margin, y);
+      // 日本語対応のPDF用HTMLを隠しdivで生成
+      const container = document.createElement("div");
+      container.style.cssText = `
+        position: fixed; left: -9999px; top: 0;
+        width: 794px; background: #ffffff; padding: 48px 60px;
+        font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+        color: #1e1e1e; font-size: 14px; line-height: 1.6;
+        box-sizing: border-box;
+      `;
 
-      // --- フッター ---
-      const pageCount = (doc as any).internal.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(7);
-        doc.setTextColor(180, 180, 180);
-        doc.text(`${i} / ${pageCount}`, pageW / 2, 290, { align: "center" });
+      const itemsHTML = estimateResult.items.map(item => `
+        <tr style="border-bottom: 1px solid #eeeeee;">
+          <td style="padding: 10px 8px;">
+            <div style="font-size: 13px; font-weight: 600; color: #1e1e1e;">${item.product.name}</div>
+            <div style="font-size: 11px; color: #999999; margin-top: 2px;">${item.product.modelNo || ""}</div>
+          </td>
+          <td style="padding: 10px 8px; text-align: right; white-space: nowrap;">¥${item.product.price.toLocaleString("ja-JP")}</td>
+          <td style="padding: 10px 8px; text-align: center;">${item.quantity}</td>
+          <td style="padding: 10px 8px; text-align: right; font-weight: 700; white-space: nowrap;">¥${item.subtotal.toLocaleString("ja-JP")}</td>
+        </tr>
+      `).join("");
+
+      container.innerHTML = `
+        <div style="background: #1e1e1e; color: #ffffff; margin: -48px -60px 40px; padding: 14px 60px; display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 13px; font-weight: 700; letter-spacing: 0.05em;">TAKASHO / LIXIL ガーデンライト</span>
+          <span style="font-size: 12px; color: #aaaaaa;">${dateStr}</span>
+        </div>
+
+        <h1 style="text-align: center; font-size: 26px; font-weight: 700; letter-spacing: 0.15em; margin: 0 0 10px;">お 見 積 書</h1>
+        <div style="height: 2px; background: #c8a050; margin-bottom: 28px;"></div>
+
+        ${userName ? `<div style="font-size: 13px; color: #555; margin-bottom: 4px;">お名前：${userName} 様</div>` : ""}
+        ${postalCode ? `<div style="font-size: 13px; color: #555; margin-bottom: 20px;">郵便番号：〒${postalCode}</div>` : ""}
+
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
+          <thead>
+            <tr style="background: #f5f5f5;">
+              <th style="padding: 10px 8px; text-align: left; font-size: 12px; font-weight: 700; color: #444; border-bottom: 2px solid #e0e0e0;">商品名 / 型番</th>
+              <th style="padding: 10px 8px; text-align: right; font-size: 12px; font-weight: 700; color: #444; border-bottom: 2px solid #e0e0e0; white-space: nowrap;">単価</th>
+              <th style="padding: 10px 8px; text-align: center; font-size: 12px; font-weight: 700; color: #444; border-bottom: 2px solid #e0e0e0;">数量</th>
+              <th style="padding: 10px 8px; text-align: right; font-size: 12px; font-weight: 700; color: #444; border-bottom: 2px solid #e0e0e0; white-space: nowrap;">小計</th>
+            </tr>
+          </thead>
+          <tbody>${itemsHTML}</tbody>
+        </table>
+
+        <div style="background: #faf7ee; border: 1.5px solid #c8a050; border-radius: 10px; padding: 20px 24px; margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="font-size: 13px; color: #666;">小計（税別）</span>
+            <span style="font-size: 14px;">¥${estimateResult.total.toLocaleString("ja-JP")}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding-bottom: 14px; border-bottom: 1px solid #e0d0a0; margin-bottom: 14px;">
+            <span style="font-size: 13px; color: #666;">消費税（10%）</span>
+            <span style="font-size: 14px;">¥${tax.toLocaleString("ja-JP")}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 16px; font-weight: 700;">合計（税込）</span>
+            <span style="font-size: 24px; font-weight: 700; color: #b4781e;">¥${total.toLocaleString("ja-JP")}</span>
+          </div>
+        </div>
+
+        <p style="font-size: 11px; color: #aaa; text-align: center; margin: 0;">
+          ※ 工事費・配線費用は含まれていません。別途お見積もりが必要です。
+        </p>
+      `;
+
+      document.body.appendChild(container);
+
+      const canvas = await html2canvas(container, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        width: 794,
+      });
+
+      document.body.removeChild(container);
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pdfW = 210;
+      const pdfH = (canvas.height * pdfW) / canvas.width;
+
+      // 複数ページ対応
+      const pageHeight = 297;
+      if (pdfH <= pageHeight) {
+        pdf.addImage(imgData, "PNG", 0, 0, pdfW, pdfH);
+      } else {
+        let remaining = canvas.height;
+        let srcY = 0;
+        const sliceH = Math.floor((canvas.width * pageHeight) / pdfW);
+        let first = true;
+        while (remaining > 0) {
+          if (!first) pdf.addPage();
+          first = false;
+          const sliceCanvas = document.createElement("canvas");
+          sliceCanvas.width = canvas.width;
+          sliceCanvas.height = Math.min(sliceH, remaining);
+          const ctx = sliceCanvas.getContext("2d")!;
+          ctx.drawImage(canvas, 0, srcY, canvas.width, sliceCanvas.height, 0, 0, canvas.width, sliceCanvas.height);
+          const sliceData = sliceCanvas.toDataURL("image/png");
+          const slicePdfH = (sliceCanvas.height * pdfW) / canvas.width;
+          pdf.addImage(sliceData, "PNG", 0, 0, pdfW, slicePdfH);
+          srcY += sliceH;
+          remaining -= sliceH;
+        }
       }
 
-      const dateStr = now.toISOString().slice(0, 10).replace(/-/g, "");
-      doc.save(`見積書_${dateStr}.pdf`);
+      const fileDateStr = now.toISOString().slice(0, 10).replace(/-/g, "");
+      pdf.save(`見積書_${fileDateStr}.pdf`);
     } finally {
       setPdfDownloading(false);
     }
