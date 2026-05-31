@@ -1860,9 +1860,6 @@ export default function SelectorPage() {
       >
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
-            <div style={{ fontSize: 10, letterSpacing: "0.2em", color: "var(--color-text-muted)", textTransform: "uppercase", marginBottom: 2 }}>
-              TAKASHO
-            </div>
             <h1 style={{ margin: 0, fontFamily: "'Noto Serif JP', serif", fontSize: 18, fontWeight: 700, color: "var(--color-text)" }}>
               <span style={{ color: "var(--color-accent)" }}>外構照明</span> セレクター
             </h1>
