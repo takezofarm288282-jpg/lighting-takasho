@@ -1944,6 +1944,8 @@ export default function SelectorPage() {
   const [pendingAddId, setPendingAddId] = useState<number | null>(null);
   const [pendingLocation, setPendingLocation] = useState<Location | null>(null);
   const [pendingSelectMode, setPendingSelectMode] = useState<SelectMode | null>(null);
+  const [pendingTreeHeight, setPendingTreeHeight] = useState<typeof TREE_HEIGHTS[number] | null>(null);
+  const [pendingShape, setPendingShape] = useState<typeof SHAPE_CATEGORIES[number] | null>(null);
 
   const [pdfDownloading, setPdfDownloading] = useState(false);
   const [selectedMaker, setSelectedMaker] = useState<"ALL" | "TAKASHO" | "LIXIL">("ALL");
@@ -2202,6 +2204,20 @@ export default function SelectorPage() {
                   setSelectedCategory(null);
                   setStep("category");
                   setPendingLocation(null);
+                } else if (pendingTreeHeight !== null) {
+                  setSelectedTreeHeight(pendingTreeHeight);
+                  setSelectedTreeLightType(null);
+                  setSelectedTreeBeamAngle(null);
+                  setSelectedTreeVoltage(null);
+                  setTreeStep("lightType");
+                  setPendingTreeHeight(null);
+                } else if (pendingShape !== null) {
+                  setSelectedShape(pendingShape);
+                  setShapeStep("products");
+                  setShapePriceRange(PRICE_RANGES[0]);
+                  setShapeColorTemp("指定なし");
+                  setShapeStyle("指定なし");
+                  setPendingShape(null);
                 } else if (pendingSelectMode === "tree") {
                   setSelectMode("tree");
                   setTreeStep("height");
@@ -2236,7 +2252,7 @@ export default function SelectorPage() {
               登録して続ける →
             </button>
             <button
-              onClick={() => { setShowRegisterModal(false); setPendingAddId(null); setPendingLocation(null); setPendingSelectMode(null); }}
+              onClick={() => { setShowRegisterModal(false); setPendingAddId(null); setPendingLocation(null); setPendingSelectMode(null); setPendingTreeHeight(null); setPendingShape(null); }}
               style={{ background: "none", border: "none", color: "var(--color-text-muted)", fontSize: 12, cursor: "pointer", textAlign: "center", fontFamily: "'Noto Sans JP', sans-serif" }}
             >
               キャンセル
@@ -2387,13 +2403,6 @@ export default function SelectorPage() {
           </button>
           <button
             onClick={() => {
-              if (!userInfoConfirmed) {
-                setPendingLocation(null);
-                setPendingAddId(null);
-                setPendingSelectMode("tree");
-                setShowRegisterModal(true);
-                return;
-              }
               setSelectMode("tree");
               setTreeStep("height");
               setSelectedTreeHeight(null);
@@ -2415,13 +2424,6 @@ export default function SelectorPage() {
           </button>
           <button
             onClick={() => {
-              if (!userInfoConfirmed) {
-                setPendingLocation(null);
-                setPendingAddId(null);
-                setPendingSelectMode("shape");
-                setShowRegisterModal(true);
-                return;
-              }
               setSelectMode("shape");
               setShapeStep("select");
               setSelectedShape(null);
@@ -2533,6 +2535,11 @@ export default function SelectorPage() {
                     <button
                       key={t.key}
                       onClick={() => {
+                        if (!userInfoConfirmed) {
+                          setPendingTreeHeight(t);
+                          setShowRegisterModal(true);
+                          return;
+                        }
                         setSelectedTreeHeight(t);
                         setSelectedTreeLightType(null);
                         setSelectedTreeBeamAngle(null);
@@ -2913,6 +2920,11 @@ export default function SelectorPage() {
                       key={shape.slug}
                       className={`animate-fade-in-up stagger-${Math.min(i + 1, 6)}`}
                       onClick={() => {
+                        if (!userInfoConfirmed) {
+                          setPendingShape(shape);
+                          setShowRegisterModal(true);
+                          return;
+                        }
                         setSelectedShape(shape);
                         setShapeStep("products");
                         setShapePriceRange(PRICE_RANGES[0]);
