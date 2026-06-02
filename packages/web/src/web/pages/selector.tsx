@@ -1942,8 +1942,7 @@ export default function SelectorPage() {
   const [userInfoConfirmed, setUserInfoConfirmed] = useState(() => typeof window !== "undefined" ? !!(localStorage.getItem("userName") && localStorage.getItem("postalCode")) : false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [pendingAddId, setPendingAddId] = useState<number | null>(null);
-  const [emailSent, setEmailSent] = useState(false);
-  const [emailSending, setEmailSending] = useState(false);
+
   const [pdfDownloading, setPdfDownloading] = useState(false);
   const [selectedMaker, setSelectedMaker] = useState<"ALL" | "TAKASHO" | "LIXIL">("ALL");
   const [priceRange, setPriceRange] = useState(PRICE_RANGES[0]);
@@ -4013,50 +4012,6 @@ export default function SelectorPage() {
                     }}
                   >
                     {pdfDownloading ? "生成中..." : "📄 PDFをダウンロード"}
-                  </button>
-                </div>
-
-                {/* Send estimate button */}
-                <div style={{ marginTop: 10 }}>
-                  <button
-                    onClick={async () => {
-                      if (emailSending || emailSent) return;
-                      setEmailSending(true);
-                      try {
-                        await fetch("/api/send-estimate", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({
-                            name: userName,
-                            postalCode,
-                            items: estimateResult!.items,
-                            total: estimateResult!.total,
-                          }),
-                        });
-                        setEmailSent(true);
-                        setTimeout(() => setEmailSent(false), 4000);
-                      } catch {
-                        // silent fail
-                      } finally {
-                        setEmailSending(false);
-                      }
-                    }}
-                    disabled={emailSending}
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      background: "none",
-                      border: `1px solid ${emailSent ? "#2a7a4f" : "var(--color-border)"}`,
-                      borderRadius: 8,
-                      color: emailSent ? "#2a7a4f" : "var(--color-text-muted)",
-                      cursor: emailSending ? "wait" : "pointer",
-                      fontSize: 13,
-                      fontWeight: 600,
-                      fontFamily: "'Noto Sans JP', sans-serif",
-                      transition: "all 0.3s",
-                    }}
-                  >
-                    {emailSent ? "✓ 見積を送信しました" : emailSending ? "送信中..." : "この見積を担当者に送る"}
                   </button>
                 </div>
 
