@@ -2338,9 +2338,9 @@ export default function SelectorPage() {
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "10px 24px", display: "flex", alignItems: "flex-start", gap: 10 }}>
           <span style={{ fontSize: 11, color: "#b45309", fontWeight: 700, whiteSpace: "nowrap", marginTop: 1, fontFamily: "'Noto Sans JP', sans-serif" }}>【ご注意】</span>
           <p style={{ margin: 0, fontSize: 11, color: "var(--color-text-muted)", lineHeight: 1.8, fontFamily: "'Noto Sans JP', sans-serif" }}>
-            本アプリはライティングのご要望や種類をご確認いただくためのものです。実際の詳細なお見積もりについては担当者までご相談ください。
+            本アプリはライティングのご要望や種類をご確認いただくためのものです。実際の詳細なお見積もりについてはご相談ください。
             表示金額は器具本体の価格であり、<strong style={{ color: "var(--color-text)" }}>施工費・配線費は別途必要</strong>となります。
-            また、掲載価格は予告なく変更される場合があります。
+            また、掲載価格は予告なく変更する場合があります。
           </p>
         </div>
       </div>
