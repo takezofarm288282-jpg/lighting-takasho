@@ -1940,7 +1940,7 @@ export default function SelectorPage() {
   const [userName, setUserName] = useState(() => (typeof window !== "undefined" ? localStorage.getItem("userName") || "" : ""));
   const [postalCode, setPostalCode] = useState(() => (typeof window !== "undefined" ? localStorage.getItem("postalCode") || "" : ""));
   const [userInfoConfirmed, setUserInfoConfirmed] = useState(() => typeof window !== "undefined" ? !!(localStorage.getItem("userName") && localStorage.getItem("postalCode")) : false);
-  const [introDone, setIntroDone] = useState(() => typeof window !== "undefined" ? !!localStorage.getItem("introDone") : false);
+  const [introDone, setIntroDone] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
   const [pdfDownloading, setPdfDownloading] = useState(false);
@@ -2177,7 +2177,6 @@ export default function SelectorPage() {
 
           <button
             onClick={() => {
-              localStorage.setItem("introDone", "1");
               setIntroDone(true);
             }}
             style={{
@@ -2312,7 +2311,6 @@ export default function SelectorPage() {
 
             <button
               onClick={() => {
-                localStorage.removeItem("introDone");
                 setIntroDone(false);
               }}
               style={{ background: "none", border: "none", color: "var(--color-text-muted)", fontSize: 12, cursor: "pointer", textAlign: "center", fontFamily: "'Noto Sans JP', sans-serif" }}
