@@ -1942,6 +1942,7 @@ export default function SelectorPage() {
   const [userInfoConfirmed, setUserInfoConfirmed] = useState(() => typeof window !== "undefined" ? !!(localStorage.getItem("userName") && localStorage.getItem("postalCode")) : false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [pendingAddId, setPendingAddId] = useState<number | null>(null);
+  const [pendingLocation, setPendingLocation] = useState<Location | null>(null);
 
   const [pdfDownloading, setPdfDownloading] = useState(false);
   const [selectedMaker, setSelectedMaker] = useState<"ALL" | "TAKASHO" | "LIXIL">("ALL");
@@ -2092,6 +2093,11 @@ export default function SelectorPage() {
   }, [estimateResult, pdfDownloading, userName, postalCode]);
 
   const handleLocationSelect = (loc: Location) => {
+    if (!userInfoConfirmed) {
+      setPendingLocation(loc);
+      setShowRegisterModal(true);
+      return;
+    }
     setSelectedLocation(loc);
     setSelectedCategory(null);
     setStep("category");
@@ -2190,7 +2196,12 @@ export default function SelectorPage() {
                 setPostalCode(postalCode.trim());
                 setUserInfoConfirmed(true);
                 setShowRegisterModal(false);
-                if (pendingAddId !== null) {
+                if (pendingLocation !== null) {
+                  setSelectedLocation(pendingLocation);
+                  setSelectedCategory(null);
+                  setStep("category");
+                  setPendingLocation(null);
+                } else if (pendingAddId !== null) {
                   addItem(pendingAddId);
                   setPendingAddId(null);
                 } else {
@@ -2211,7 +2222,7 @@ export default function SelectorPage() {
               登録して続ける →
             </button>
             <button
-              onClick={() => { setShowRegisterModal(false); setPendingAddId(null); }}
+              onClick={() => { setShowRegisterModal(false); setPendingAddId(null); setPendingLocation(null); }}
               style={{ background: "none", border: "none", color: "var(--color-text-muted)", fontSize: 12, cursor: "pointer", textAlign: "center", fontFamily: "'Noto Sans JP', sans-serif" }}
             >
               キャンセル
