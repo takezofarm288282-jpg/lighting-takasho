@@ -1939,6 +1939,7 @@ export default function SelectorPage() {
   const [userName, setUserName] = useState(() => (typeof window !== "undefined" ? localStorage.getItem("userName") || "" : ""));
   const [postalCode, setPostalCode] = useState(() => (typeof window !== "undefined" ? localStorage.getItem("postalCode") || "" : ""));
   const [userInfoConfirmed, setUserInfoConfirmed] = useState(() => typeof window !== "undefined" ? !!(localStorage.getItem("userName") && localStorage.getItem("postalCode")) : false);
+  const [introDone, setIntroDone] = useState(() => typeof window !== "undefined" ? !!localStorage.getItem("introDone") : false);
   const [emailSent, setEmailSent] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
   const [pdfDownloading, setPdfDownloading] = useState(false);
@@ -2121,6 +2122,85 @@ export default function SelectorPage() {
   const stepIndex = steps.findIndex((s) => s.key === step);
 
   // User info gate — show full-screen form until confirmed
+  // ── イントロ画面 ──────────────────────────────────────────
+  if (!introDone) {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        background: "var(--color-bg)",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "24px",
+      }}>
+        <div style={{ width: "100%", maxWidth: 520 }}>
+          {/* ロゴ */}
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <div style={{ fontFamily: "'Noto Serif JP', serif", fontSize: 11, letterSpacing: "0.3em", color: "var(--color-accent)", marginBottom: 10 }}>
+              TAKASHO × LIXIL
+            </div>
+            <h1 style={{ margin: "0 0 12px", fontFamily: "'Noto Serif JP', serif", fontSize: 28, fontWeight: 700, color: "var(--color-text)", lineHeight: 1.4 }}>
+              ガーデンライト<br />セレクター
+            </h1>
+            <p style={{ margin: 0, fontSize: 14, color: "var(--color-text-muted)", fontFamily: "'Noto Sans JP', sans-serif", lineHeight: 1.8 }}>
+              お庭や外構に最適な照明を選んで、<br />そのまま見積書をつくれるツールです。
+            </p>
+          </div>
+
+          {/* 機能紹介カード */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 40 }}>
+            {[
+              { icon: "🌿", title: "設置場所から選ぶ", desc: "庭・アプローチ・駐車場など設置場所に合った照明を絞り込めます" },
+              { icon: "🌳", title: "樹木の高さ・形から選ぶ", desc: "ライトアップしたい樹木のサイズや形状から最適な機種を提案します" },
+              { icon: "📋", title: "その場で見積書を作成", desc: "気に入った照明を選んで数量を決めるだけ。PDF見積書をダウンロードできます" },
+              { icon: "📮", title: "担当者にそのまま送信", desc: "見積内容をメールで担当者に送れるので、そのまま発注相談に進めます" },
+            ].map((item) => (
+              <div key={item.title} style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 16,
+                padding: "16px 20px",
+                background: "var(--color-surface)",
+                border: "1px solid var(--color-border)",
+                borderRadius: 12,
+              }}>
+                <span style={{ fontSize: 24, lineHeight: 1, marginTop: 2 }}>{item.icon}</span>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--color-text)", fontFamily: "'Noto Sans JP', sans-serif", marginBottom: 4 }}>{item.title}</div>
+                  <div style={{ fontSize: 12, color: "var(--color-text-muted)", fontFamily: "'Noto Sans JP', sans-serif", lineHeight: 1.6 }}>{item.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={() => {
+              localStorage.setItem("introDone", "1");
+              setIntroDone(true);
+            }}
+            style={{
+              width: "100%",
+              padding: "16px",
+              background: "var(--color-accent)",
+              border: "none",
+              borderRadius: 10,
+              color: "#ffffff",
+              cursor: "pointer",
+              fontSize: 15,
+              fontWeight: 700,
+              fontFamily: "'Noto Sans JP', sans-serif",
+              letterSpacing: "0.05em",
+            }}
+          >
+            はじめる →
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── 名前・郵便番号入力画面 ──────────────────────────────────
   if (!userInfoConfirmed) {
     return (
       <div style={{
@@ -2140,13 +2220,15 @@ export default function SelectorPage() {
           padding: "36px 32px",
         }}>
           <div style={{ textAlign: "center", marginBottom: 28 }}>
-            <div style={{ fontFamily: "'Noto Serif JP', serif", fontSize: 13, letterSpacing: "0.2em", color: "var(--color-accent)", marginBottom: 8 }}>
-              TAKASHO LIGHTING
+            <div style={{ fontFamily: "'Noto Serif JP', serif", fontSize: 11, letterSpacing: "0.2em", color: "var(--color-accent)", marginBottom: 10 }}>
+              STEP 1 / 1
             </div>
-            <h1 style={{ margin: 0, fontFamily: "'Noto Serif JP', serif", fontSize: 20, fontWeight: 700, color: "var(--color-text)" }}>
-              ご利用前にお客様情報を<br />ご入力ください
-            </h1>
-
+            <h2 style={{ margin: "0 0 10px", fontFamily: "'Noto Serif JP', serif", fontSize: 20, fontWeight: 700, color: "var(--color-text)" }}>
+              お客様情報の登録
+            </h2>
+            <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-muted)", fontFamily: "'Noto Sans JP', sans-serif", lineHeight: 1.7 }}>
+              見積書に記載するお名前と郵便番号を<br />ご入力ください。
+            </p>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -2224,7 +2306,17 @@ export default function SelectorPage() {
                 transition: "background 0.2s",
               }}
             >
-              はじめる
+              登録して使い始める →
+            </button>
+
+            <button
+              onClick={() => {
+                localStorage.removeItem("introDone");
+                setIntroDone(false);
+              }}
+              style={{ background: "none", border: "none", color: "var(--color-text-muted)", fontSize: 12, cursor: "pointer", textAlign: "center", fontFamily: "'Noto Sans JP', sans-serif" }}
+            >
+              ← 戻る
             </button>
           </div>
         </div>
