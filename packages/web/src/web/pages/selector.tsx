@@ -1943,6 +1943,7 @@ export default function SelectorPage() {
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [pendingAddId, setPendingAddId] = useState<number | null>(null);
   const [pendingLocation, setPendingLocation] = useState<Location | null>(null);
+  const [pendingSelectMode, setPendingSelectMode] = useState<SelectMode | null>(null);
 
   const [pdfDownloading, setPdfDownloading] = useState(false);
   const [selectedMaker, setSelectedMaker] = useState<"ALL" | "TAKASHO" | "LIXIL">("ALL");
@@ -2201,6 +2202,19 @@ export default function SelectorPage() {
                   setSelectedCategory(null);
                   setStep("category");
                   setPendingLocation(null);
+                } else if (pendingSelectMode === "tree") {
+                  setSelectMode("tree");
+                  setTreeStep("height");
+                  setSelectedTreeHeight(null);
+                  setSelectedTreeLightType(null);
+                  setSelectedTreeBeamAngle(null);
+                  setSelectedTreeVoltage(null);
+                  setPendingSelectMode(null);
+                } else if (pendingSelectMode === "shape") {
+                  setSelectMode("shape");
+                  setShapeStep("select");
+                  setSelectedShape(null);
+                  setPendingSelectMode(null);
                 } else if (pendingAddId !== null) {
                   addItem(pendingAddId);
                   setPendingAddId(null);
@@ -2222,7 +2236,7 @@ export default function SelectorPage() {
               登録して続ける →
             </button>
             <button
-              onClick={() => { setShowRegisterModal(false); setPendingAddId(null); setPendingLocation(null); }}
+              onClick={() => { setShowRegisterModal(false); setPendingAddId(null); setPendingLocation(null); setPendingSelectMode(null); }}
               style={{ background: "none", border: "none", color: "var(--color-text-muted)", fontSize: 12, cursor: "pointer", textAlign: "center", fontFamily: "'Noto Sans JP', sans-serif" }}
             >
               キャンセル
@@ -2373,6 +2387,13 @@ export default function SelectorPage() {
           </button>
           <button
             onClick={() => {
+              if (!userInfoConfirmed) {
+                setPendingLocation(null);
+                setPendingAddId(null);
+                setPendingSelectMode("tree");
+                setShowRegisterModal(true);
+                return;
+              }
               setSelectMode("tree");
               setTreeStep("height");
               setSelectedTreeHeight(null);
@@ -2394,6 +2415,13 @@ export default function SelectorPage() {
           </button>
           <button
             onClick={() => {
+              if (!userInfoConfirmed) {
+                setPendingLocation(null);
+                setPendingAddId(null);
+                setPendingSelectMode("shape");
+                setShowRegisterModal(true);
+                return;
+              }
               setSelectMode("shape");
               setShapeStep("select");
               setSelectedShape(null);
