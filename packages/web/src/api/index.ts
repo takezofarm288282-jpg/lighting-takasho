@@ -333,7 +333,7 @@ const app = new Hono()
 
     const puppeteer = await import("puppeteer-core");
     const browser = await puppeteer.default.launch({
-      executablePath: "/usr/bin/google-chrome",
+      executablePath: process.env.CHROME_PATH || "/usr/bin/google-chrome",
       headless: true,
       args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
     });
