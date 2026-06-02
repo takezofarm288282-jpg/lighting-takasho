@@ -2280,29 +2280,7 @@ export default function SelectorPage() {
             </h1>
           </div>
 
-          {/* Cart button */}
-          {totalCount > 0 && (
-            <button
-              onClick={handleViewEstimate}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                background: "var(--color-accent)",
-                color: "#ffffff",
-                border: "none",
-                borderRadius: 24,
-                padding: "8px 16px",
-                fontWeight: 700,
-                fontSize: 14,
-                cursor: "pointer",
-                fontFamily: "'Noto Sans JP', sans-serif",
-              }}
-            >
-              <ShoppingCart size={16} />
-              見積もりを見る ({totalCount}点)
-            </button>
-          )}
+
         </div>
 
         {/* Step indicator */}
