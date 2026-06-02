@@ -3868,9 +3868,8 @@ export default function SelectorPage() {
                 className="animate-fade-in"
                 style={{
                   position: "fixed",
-                  bottom: 24,
-                  left: "50%",
-                  transform: "translateX(-50%)",
+                  top: 24,
+                  right: 24,
                   background: "var(--color-surface2)",
                   border: "1px solid var(--color-accent)",
                   borderRadius: 24,
