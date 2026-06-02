@@ -3935,7 +3935,7 @@ export default function SelectorPage() {
                           {item.quantity}
                         </span>
                         <button
-                          onClick={() => { addItem(item.product.id); estimateMutation.mutate(); }}
+                          onClick={() => { addItemWithCheck(item.product.id); estimateMutation.mutate(); }}
                           style={{ width: 28, height: 28, borderRadius: 6, background: "var(--color-surface)", border: "1px solid var(--color-border)", color: "var(--color-text)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
                         >
                           <Plus size={12} />
