@@ -1937,15 +1937,6 @@ export default function SelectorPage() {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [showEstimate, setShowEstimate] = useState(false);
 
-  // バージョンキーで古いlocalStorageを無効化（バージョンを上げると全ユーザーが再登録フローへ）
-  const APP_VERSION = "v2";
-  if (typeof window !== "undefined" && localStorage.getItem("appVersion") !== APP_VERSION) {
-    localStorage.removeItem("userName");
-    localStorage.removeItem("postalCode");
-    localStorage.removeItem("introDone");
-    localStorage.setItem("appVersion", APP_VERSION);
-  }
-
   const [userName, setUserName] = useState(() => (typeof window !== "undefined" ? localStorage.getItem("userName") || "" : ""));
   const [postalCode, setPostalCode] = useState(() => (typeof window !== "undefined" ? localStorage.getItem("postalCode") || "" : ""));
   const [userInfoConfirmed, setUserInfoConfirmed] = useState(() => typeof window !== "undefined" ? !!(localStorage.getItem("userName") && localStorage.getItem("postalCode")) : false);
