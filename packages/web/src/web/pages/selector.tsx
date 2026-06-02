@@ -2140,90 +2140,86 @@ export default function SelectorPage() {
     }
   };
 
-  // 登録モーダル
-  const RegisterModal = () => (
-    <div
-      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
-      onClick={() => setShowRegisterModal(false)}
-    >
-      <div
-        style={{ width: "100%", maxWidth: 400, background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: 16, padding: "32px 28px" }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div style={{ textAlign: "center", marginBottom: 24 }}>
-          <div style={{ fontSize: 11, letterSpacing: "0.2em", color: "var(--color-accent)", marginBottom: 8, fontFamily: "'Noto Serif JP', serif" }}>TAKASHO × LIXIL</div>
-          <h2 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 700, color: "var(--color-text)", fontFamily: "'Noto Serif JP', serif" }}>お客様情報の登録</h2>
-          <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-muted)", fontFamily: "'Noto Sans JP', sans-serif", lineHeight: 1.7 }}>
-            見積書に記載するお名前と<br />郵便番号をご入力ください。
-          </p>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div>
-            <label style={{ display: "block", fontSize: 12, color: "var(--color-text-muted)", marginBottom: 5, fontFamily: "'Noto Sans JP', sans-serif" }}>お名前 <span style={{ color: "#e05" }}>*</span></label>
-            <input
-              type="text"
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
-              placeholder="例：田中 太郎"
-              autoFocus
-              style={{ width: "100%", padding: "11px 13px", background: "var(--color-surface2)", border: "1px solid var(--color-border)", borderRadius: 8, color: "var(--color-text)", fontSize: 14, fontFamily: "'Noto Sans JP', sans-serif", boxSizing: "border-box", outline: "none" }}
-            />
-          </div>
-          <div>
-            <label style={{ display: "block", fontSize: 12, color: "var(--color-text-muted)", marginBottom: 5, fontFamily: "'Noto Sans JP', sans-serif" }}>郵便番号 <span style={{ color: "#e05" }}>*</span></label>
-            <input
-              type="text"
-              value={postalCode}
-              onChange={(e) => setPostalCode(e.target.value)}
-              placeholder="例：123-4567"
-              maxLength={8}
-              style={{ width: "100%", padding: "11px 13px", background: "var(--color-surface2)", border: "1px solid var(--color-border)", borderRadius: 8, color: "var(--color-text)", fontSize: 14, fontFamily: "'Noto Sans JP', sans-serif", boxSizing: "border-box", outline: "none" }}
-            />
-          </div>
-          <button
-            onClick={() => {
-              if (!userName.trim() || !postalCode.trim()) return;
-              localStorage.setItem("userName", userName.trim());
-              localStorage.setItem("postalCode", postalCode.trim());
-              setUserName(userName.trim());
-              setPostalCode(postalCode.trim());
-              setUserInfoConfirmed(true);
-              setShowRegisterModal(false);
-              if (pendingAddId !== null) {
-                addItem(pendingAddId);
-                setPendingAddId(null);
-              } else {
-                // 見積ボタン経由の場合
-                setShowEstimate(true);
-                estimateMutation.mutate();
-              }
-            }}
-            disabled={!userName.trim() || !postalCode.trim()}
-            style={{
-              width: "100%", padding: "13px", marginTop: 4,
-              background: (!userName.trim() || !postalCode.trim()) ? "var(--color-surface2)" : "var(--color-accent)",
-              border: "none", borderRadius: 8,
-              color: (!userName.trim() || !postalCode.trim()) ? "var(--color-text-muted)" : "#ffffff",
-              cursor: (!userName.trim() || !postalCode.trim()) ? "not-allowed" : "pointer",
-              fontSize: 14, fontWeight: 700, fontFamily: "'Noto Sans JP', sans-serif", transition: "background 0.2s",
-            }}
-          >
-            登録して続ける →
-          </button>
-          <button
-            onClick={() => { setShowRegisterModal(false); setPendingAddId(null); }}
-            style={{ background: "none", border: "none", color: "var(--color-text-muted)", fontSize: 12, cursor: "pointer", textAlign: "center", fontFamily: "'Noto Sans JP', sans-serif" }}
-          >
-            キャンセル
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <>
-    {showRegisterModal && <RegisterModal />}
+    {showRegisterModal && (
+      <div
+        style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
+        onClick={() => setShowRegisterModal(false)}
+      >
+        <div
+          style={{ width: "100%", maxWidth: 400, background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: 16, padding: "32px 28px" }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div style={{ textAlign: "center", marginBottom: 24 }}>
+            <div style={{ fontSize: 11, letterSpacing: "0.2em", color: "var(--color-accent)", marginBottom: 8, fontFamily: "'Noto Serif JP', serif" }}>TAKASHO × LIXIL</div>
+            <h2 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 700, color: "var(--color-text)", fontFamily: "'Noto Serif JP', serif" }}>お客様情報の登録</h2>
+            <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-muted)", fontFamily: "'Noto Sans JP', sans-serif", lineHeight: 1.7 }}>
+              見積書に記載するお名前と<br />郵便番号をご入力ください。
+            </p>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div>
+              <label style={{ display: "block", fontSize: 12, color: "var(--color-text-muted)", marginBottom: 5, fontFamily: "'Noto Sans JP', sans-serif" }}>お名前 <span style={{ color: "#e05" }}>*</span></label>
+              <input
+                type="text"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                placeholder="例：田中 太郎"
+                autoFocus
+                style={{ width: "100%", padding: "11px 13px", background: "var(--color-surface2)", border: "1px solid var(--color-border)", borderRadius: 8, color: "var(--color-text)", fontSize: 14, fontFamily: "'Noto Sans JP', sans-serif", boxSizing: "border-box", outline: "none" }}
+              />
+            </div>
+            <div>
+              <label style={{ display: "block", fontSize: 12, color: "var(--color-text-muted)", marginBottom: 5, fontFamily: "'Noto Sans JP', sans-serif" }}>郵便番号 <span style={{ color: "#e05" }}>*</span></label>
+              <input
+                type="text"
+                value={postalCode}
+                onChange={(e) => setPostalCode(e.target.value)}
+                placeholder="例：123-4567"
+                maxLength={8}
+                style={{ width: "100%", padding: "11px 13px", background: "var(--color-surface2)", border: "1px solid var(--color-border)", borderRadius: 8, color: "var(--color-text)", fontSize: 14, fontFamily: "'Noto Sans JP', sans-serif", boxSizing: "border-box", outline: "none" }}
+              />
+            </div>
+            <button
+              onClick={() => {
+                if (!userName.trim() || !postalCode.trim()) return;
+                localStorage.setItem("userName", userName.trim());
+                localStorage.setItem("postalCode", postalCode.trim());
+                setUserName(userName.trim());
+                setPostalCode(postalCode.trim());
+                setUserInfoConfirmed(true);
+                setShowRegisterModal(false);
+                if (pendingAddId !== null) {
+                  addItem(pendingAddId);
+                  setPendingAddId(null);
+                } else {
+                  setShowEstimate(true);
+                  estimateMutation.mutate();
+                }
+              }}
+              disabled={!userName.trim() || !postalCode.trim()}
+              style={{
+                width: "100%", padding: "13px", marginTop: 4,
+                background: (!userName.trim() || !postalCode.trim()) ? "var(--color-surface2)" : "var(--color-accent)",
+                border: "none", borderRadius: 8,
+                color: (!userName.trim() || !postalCode.trim()) ? "var(--color-text-muted)" : "#ffffff",
+                cursor: (!userName.trim() || !postalCode.trim()) ? "not-allowed" : "pointer",
+                fontSize: 14, fontWeight: 700, fontFamily: "'Noto Sans JP', sans-serif", transition: "background 0.2s",
+              }}
+            >
+              登録して続ける →
+            </button>
+            <button
+              onClick={() => { setShowRegisterModal(false); setPendingAddId(null); }}
+              style={{ background: "none", border: "none", color: "var(--color-text-muted)", fontSize: 12, cursor: "pointer", textAlign: "center", fontFamily: "'Noto Sans JP', sans-serif" }}
+            >
+              キャンセル
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     <div style={{ minHeight: "100vh", background: "var(--color-bg)" }}>
       {/* Header */}
       <header
