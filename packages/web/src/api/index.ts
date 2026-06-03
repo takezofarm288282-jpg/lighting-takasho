@@ -281,12 +281,22 @@ const app = new Hono()
       .where(and(eq(schema.visitors.name, name.trim()), eq(schema.visitors.postalCode, postalCode.trim())))
       .limit(1);
 
+    const itemsJson = JSON.stringify(items.map((item) => ({
+      name: item.product.name,
+      modelNo: item.product.modelNo,
+      price: item.product.price,
+      quantity: item.quantity,
+      subtotal: item.subtotal,
+    })));
+
     if (existing[0]) {
       await db
         .update(schema.visitors)
         .set({
           lastEstimateAt: nowIso,
           estimateCount: (existing[0].estimateCount ?? 0) + 1,
+          lastEstimateItems: itemsJson,
+          lastEstimateTotal: total,
         })
         .where(eq(schema.visitors.id, existing[0].id));
     } else {
@@ -297,6 +307,8 @@ const app = new Hono()
         registeredAt: nowIso,
         lastEstimateAt: nowIso,
         estimateCount: 1,
+        lastEstimateItems: itemsJson,
+        lastEstimateTotal: total,
       });
     }
 

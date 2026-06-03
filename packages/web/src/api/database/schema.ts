@@ -51,4 +51,6 @@ export const visitors = sqliteTable("visitors", {
   registeredAt: text("registered_at").notNull(), // ISO string
   lastEstimateAt: text("last_estimate_at"),       // 最後に見積した日時
   estimateCount: integer("estimate_count").default(0), // 見積回数
+  lastEstimateItems: text("last_estimate_items"), // JSON: [{name, modelNo, price, quantity, subtotal}]
+  lastEstimateTotal: integer("last_estimate_total"), // 税別合計
 });
