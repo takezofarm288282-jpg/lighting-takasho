@@ -261,9 +261,10 @@ const app = new Hono()
 
   // Generate PDF estimate
   .post("/generate-pdf", async (c) => {
-    const { name, postalCode, items, total } = await c.req.json<{
+    const { name, postalCode, items, total, locationName } = await c.req.json<{
       name: string;
       postalCode: string;
+      locationName?: string;
       items: { product: { id: number; name: string; modelNo: string; price: number }; quantity: number; subtotal: number }[];
       total: number;
     }>();
@@ -289,6 +290,7 @@ const app = new Hono()
       subtotal: item.subtotal,
     })));
 
+    let visitorId: number;
     if (existing[0]) {
       await db
         .update(schema.visitors)
@@ -299,9 +301,10 @@ const app = new Hono()
           lastEstimateTotal: total,
         })
         .where(eq(schema.visitors.id, existing[0].id));
+      visitorId = existing[0].id;
     } else {
       // 登録されていなければ新規作成
-      await db.insert(schema.visitors).values({
+      const inserted = await db.insert(schema.visitors).values({
         name: name.trim(),
         postalCode: postalCode.trim(),
         registeredAt: nowIso,
@@ -309,8 +312,18 @@ const app = new Hono()
         estimateCount: 1,
         lastEstimateItems: itemsJson,
         lastEstimateTotal: total,
-      });
+      }).returning({ id: schema.visitors.id });
+      visitorId = inserted[0].id;
     }
+
+    // 見積履歴を estimates テーブルに全件保存
+    await db.insert(schema.estimates).values({
+      visitorId,
+      locationName: locationName ?? null,
+      items: itemsJson,
+      total,
+      createdAt: nowIso,
+    });
 
     const itemRows = items.map((item) =>
       `<tr>
@@ -516,7 +529,25 @@ const app = new Hono()
       .from(schema.visitors)
       .orderBy(desc(schema.visitors.registeredAt));
 
-    return c.json({ visitors }, 200);
+    // 全見積履歴を取得
+    const allEstimates = await db
+      .select()
+      .from(schema.estimates)
+      .orderBy(desc(schema.estimates.createdAt));
+
+    // visitor_id でグルーピング
+    const estimatesByVisitor: Record<number, typeof allEstimates> = {};
+    for (const e of allEstimates) {
+      if (!estimatesByVisitor[e.visitorId]) estimatesByVisitor[e.visitorId] = [];
+      estimatesByVisitor[e.visitorId].push(e);
+    }
+
+    const result = visitors.map((v) => ({
+      ...v,
+      estimateHistory: estimatesByVisitor[v.id] ?? [],
+    }));
+
+    return c.json({ visitors: result }, 200);
   });
 
 export type AppType = typeof app;

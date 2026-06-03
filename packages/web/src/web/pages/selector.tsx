@@ -2075,6 +2075,7 @@ export default function SelectorPage() {
         body: JSON.stringify({
           name: userName,
           postalCode,
+          locationName: selectedLocation?.name ?? null,
           items: estimateResult.items,
           total: estimateResult.total,
         }),

@@ -54,3 +54,12 @@ export const visitors = sqliteTable("visitors", {
   lastEstimateItems: text("last_estimate_items"), // JSON: [{name, modelNo, price, quantity, subtotal}]
   lastEstimateTotal: integer("last_estimate_total"), // 税別合計
 });
+
+export const estimates = sqliteTable("estimates", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  visitorId: integer("visitor_id").notNull().references(() => visitors.id),
+  locationName: text("location_name"),           // 施工場所名 e.g. "庭・ガーデン"
+  items: text("items").notNull(),                // JSON: [{name, modelNo, price, quantity, subtotal}]
+  total: integer("total").notNull(),             // 税別合計
+  createdAt: text("created_at").notNull(),       // ISO string
+});
