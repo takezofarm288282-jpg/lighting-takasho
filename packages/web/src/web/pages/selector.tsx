@@ -1282,6 +1282,7 @@ function TransformerCalculator() {
   const [wattPerLight, setWattPerLight] = useState(5);
   const [voltage, setVoltage] = useState<"24V" | "12V">("24V");
   const [hoursPerDay, setHoursPerDay] = useState(5);
+  const isMobileCalc = typeof window !== "undefined" && window.innerWidth < 768;
 
   const totalW = lightCount * wattPerLight;
   // 合計W × 1.4 の安全係数で推奨トランスを決定
@@ -1380,7 +1381,7 @@ function TransformerCalculator() {
 
       {/* 計算結果 */}
       <div style={{ background: "var(--color-surface2)", borderRadius: 12, padding: "16px 20px", border: "1px solid var(--color-border)" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobileCalc ? "1fr 1fr" : "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 14 }}>
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: 11, color: "var(--color-text-muted)", marginBottom: 4 }}>合計W数</div>
             <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, fontWeight: 700, color: "var(--color-text)" }}>{totalW}<span style={{ fontSize: 13, marginLeft: 2 }}>W</span></div>

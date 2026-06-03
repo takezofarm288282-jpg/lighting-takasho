@@ -23,6 +23,7 @@ html, body {
   color: var(--color-text);
   font-family: 'Noto Sans JP', sans-serif;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 #root {
@@ -98,18 +99,12 @@ html, body {
     padding-bottom: 90px !important; /* カートバーの高さ分 */
   }
 
-  /* 商品グリッドを2列に */
-  [style*="minmax(260px"] {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-  [style*="minmax(280px"] {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-  [style*="minmax(200px"] {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
+  /* 商品グリッドを1列に */
+  [style*="minmax(260px"],
+  [style*="minmax(280px"],
+  [style*="minmax(200px"],
   [style*="minmax(220px"] {
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: 1fr !important;
   }
 
   /* ヘッダーのpadding縮小 */
@@ -123,12 +118,4 @@ html, body {
   }
 }
 
-@media (max-width: 480px) {
-  /* 超小画面では1列 */
-  [style*="minmax(260px"] {
-    grid-template-columns: 1fr !important;
-  }
-  [style*="minmax(280px"] {
-    grid-template-columns: 1fr !important;
-  }
-}
+
