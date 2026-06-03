@@ -1953,6 +1953,12 @@ export default function SelectorPage() {
   const [colorTemp, setColorTemp] = useState("指定なし");
   const [style, setStyle] = useState("指定なし");
   const [showFilters, setShowFilters] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" ? window.innerWidth < 768 : false);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
   const [beamAngle, setBeamAngle] = useState(BEAM_ANGLES[0]);
   const [reachDistance, setReachDistance] = useState(REACH_DISTANCES[0]);
   const [estimateResult, setEstimateResult] = useState<{
@@ -2280,18 +2286,16 @@ export default function SelectorPage() {
           backdropFilter: "blur(12px)",
         }}
       >
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: isMobile ? "10px 14px" : "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
-            <h1 style={{ margin: 0, fontFamily: "'Noto Serif JP', serif", fontSize: 18, fontWeight: 700, color: "var(--color-text)" }}>
-              <span style={{ color: "var(--color-accent)" }}>外構ライティング</span> セレクター
+            <h1 style={{ margin: 0, fontFamily: "'Noto Serif JP', serif", fontSize: isMobile ? 15 : 18, fontWeight: 700, color: "var(--color-text)" }}>
+              <span style={{ color: "var(--color-accent)" }}>外構ライティング</span>{isMobile ? "" : " セレクター"}
             </h1>
           </div>
-
-
         </div>
 
         {/* Step indicator */}
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "8px 24px 12px" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: isMobile ? "4px 14px 8px" : "8px 24px 12px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             {steps.map((s, i) => {
               const isDone = i < stepIndex;
@@ -2368,92 +2372,59 @@ export default function SelectorPage() {
       </div>
 
       {/* Main content */}
-      <main style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px" }}>
+      <main style={{ maxWidth: 1200, margin: "0 auto", padding: isMobile ? "16px 12px 100px" : "32px 24px" }}>
 
         {/* Mode toggle tabs */}
-        <div style={{ display: "flex", gap: 8, marginBottom: 32, background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: 12, padding: 4, width: "fit-content" }}>
-          <button
-            onClick={() => setSelectMode("location")}
-            style={{
-              display: "flex", alignItems: "center", gap: 8,
-              padding: "10px 20px", borderRadius: 8, border: "none", cursor: "pointer",
-              fontFamily: "'Noto Sans JP', sans-serif", fontSize: 14, fontWeight: 600,
-              transition: "all 0.2s",
-              background: selectMode === "location" ? "var(--color-accent)" : "transparent",
-              color: selectMode === "location" ? "#ffffff" : "var(--color-text-muted)",
-            }}
-          >
-            <MapPin size={16} />
-            場所から選ぶ
-          </button>
-          <button
-            onClick={() => {
-              setSelectMode("tree");
-              setTreeStep("height");
-              setSelectedTreeHeight(null);
-              setSelectedTreeLightType(null);
-              setSelectedTreeBeamAngle(null);
-              setSelectedTreeVoltage(null);
-            }}
-            style={{
-              display: "flex", alignItems: "center", gap: 8,
-              padding: "10px 20px", borderRadius: 8, border: "none", cursor: "pointer",
-              fontFamily: "'Noto Sans JP', sans-serif", fontSize: 14, fontWeight: 600,
-              transition: "all 0.2s",
-              background: selectMode === "tree" ? "var(--color-accent)" : "transparent",
-              color: selectMode === "tree" ? "#ffffff" : "var(--color-text-muted)",
-            }}
-          >
-            <Trees size={16} />
-            樹木の高さから選ぶ
-          </button>
-          <button
-            onClick={() => {
-              setSelectMode("shape");
-              setShapeStep("select");
-              setSelectedShape(null);
-            }}
-            style={{
-              display: "flex", alignItems: "center", gap: 8,
-              padding: "10px 20px", borderRadius: 8, border: "none", cursor: "pointer",
-              fontFamily: "'Noto Sans JP', sans-serif", fontSize: 14, fontWeight: 600,
-              transition: "all 0.2s",
-              background: selectMode === "shape" ? "var(--color-accent)" : "transparent",
-              color: selectMode === "shape" ? "#ffffff" : "var(--color-text-muted)",
-            }}
-          >
-            <Layers size={16} />
-            形状から選ぶ
-          </button>
-          <button
-            onClick={() => setSelectMode("transformer")}
-            style={{
-              display: "flex", alignItems: "center", gap: 8,
-              padding: "10px 20px", borderRadius: 8, border: "none", cursor: "pointer",
-              fontFamily: "'Noto Sans JP', sans-serif", fontSize: 14, fontWeight: 600,
-              transition: "all 0.2s",
-              background: selectMode === "transformer" ? "var(--color-accent)" : "transparent",
-              color: selectMode === "transformer" ? "#ffffff" : "var(--color-text-muted)",
-            }}
-          >
-            <Plug size={16} />
-            トランスガイド
-          </button>
+        <div style={{
+          display: "flex", gap: isMobile ? 4 : 8, marginBottom: isMobile ? 20 : 32,
+          background: "var(--color-surface)", border: "1px solid var(--color-border)",
+          borderRadius: 12, padding: isMobile ? 3 : 4,
+          width: isMobile ? "100%" : "fit-content",
+          overflowX: isMobile ? "auto" : "visible",
+        }}>
+          {[
+            { mode: "location" as SelectMode, icon: <MapPin size={isMobile ? 14 : 16} />, label: "場所", fullLabel: "場所から選ぶ", action: () => setSelectMode("location") },
+            { mode: "tree" as SelectMode, icon: <Trees size={isMobile ? 14 : 16} />, label: "樹木", fullLabel: "樹木の高さから選ぶ", action: () => { setSelectMode("tree"); setTreeStep("height"); setSelectedTreeHeight(null); setSelectedTreeLightType(null); setSelectedTreeBeamAngle(null); setSelectedTreeVoltage(null); } },
+            { mode: "shape" as SelectMode, icon: <Layers size={isMobile ? 14 : 16} />, label: "形状", fullLabel: "形状から選ぶ", action: () => { setSelectMode("shape"); setShapeStep("select"); setSelectedShape(null); } },
+            { mode: "transformer" as SelectMode, icon: <Plug size={isMobile ? 14 : 16} />, label: "トランス", fullLabel: "トランスガイド", action: () => setSelectMode("transformer") },
+          ].map(({ mode, icon, label, fullLabel, action }) => (
+            <button
+              key={mode}
+              onClick={action}
+              style={{
+                display: "flex", alignItems: "center", gap: isMobile ? 4 : 8,
+                padding: isMobile ? "8px 10px" : "10px 20px",
+                borderRadius: 8, border: "none", cursor: "pointer",
+                fontFamily: "'Noto Sans JP', sans-serif",
+                fontSize: isMobile ? 12 : 14, fontWeight: 600,
+                transition: "all 0.2s",
+                background: selectMode === mode ? "var(--color-accent)" : "transparent",
+                color: selectMode === mode ? "#ffffff" : "var(--color-text-muted)",
+                flexShrink: 0,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {icon}
+              {isMobile ? label : fullLabel}
+            </button>
+          ))}
           {/* 区切り線 */}
-          <div style={{ width: 1, height: 24, background: "var(--color-border)", alignSelf: "center", margin: "0 4px" }} />
+          <div style={{ width: 1, height: 24, background: "var(--color-border)", alignSelf: "center", margin: "0 2px", flexShrink: 0 }} />
           <button
             onClick={() => setNavLocation("/cases")}
             style={{
-              display: "flex", alignItems: "center", gap: 8,
-              padding: "10px 20px", borderRadius: 8, border: "none", cursor: "pointer",
-              fontFamily: "'Noto Sans JP', sans-serif", fontSize: 14, fontWeight: 600,
+              display: "flex", alignItems: "center", gap: isMobile ? 4 : 8,
+              padding: isMobile ? "8px 10px" : "10px 20px",
+              borderRadius: 8, border: "none", cursor: "pointer",
+              fontFamily: "'Noto Sans JP', sans-serif",
+              fontSize: isMobile ? 12 : 14, fontWeight: 600,
               transition: "all 0.2s",
-              background: "transparent",
-              color: "var(--color-accent)",
+              background: "transparent", color: "var(--color-accent)",
+              flexShrink: 0, whiteSpace: "nowrap",
             }}
           >
-            <BookMarked size={16} />
-            事例集
+            <BookMarked size={isMobile ? 14 : 16} />
+            {isMobile ? "事例" : "事例集"}
           </button>
         </div>
 
@@ -3849,48 +3820,99 @@ export default function SelectorPage() {
 
             {/* Floating estimate bar */}
             {totalCount > 0 && (
-              <div
-                className="animate-fade-in"
-                style={{
-                  position: "fixed",
-                  top: 24,
-                  right: 24,
-                  background: "var(--color-surface2)",
-                  border: "1px solid var(--color-accent)",
-                  borderRadius: 24,
-                  padding: "12px 24px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 16,
-                  boxShadow: "0 8px 32px rgba(201,168,76,0.2)",
-                  zIndex: 40,
-                  backdropFilter: "blur(8px)",
-                }}
-              >
-                <span style={{ fontSize: 13, color: "var(--color-text-muted)" }}>
-                  {totalCount}点を選択中
-                </span>
-                <button
-                  onClick={handleViewEstimate}
+              isMobile ? (
+                /* スマホ: 画面下部に大きく固定 */
+                <div
+                  className="animate-fade-in"
                   style={{
-                    background: "var(--color-accent)",
-                    color: "#ffffff",
-                    border: "none",
-                    borderRadius: 20,
-                    padding: "8px 20px",
-                    fontWeight: 700,
-                    fontSize: 13,
-                    cursor: "pointer",
+                    position: "fixed",
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    background: "var(--color-surface)",
+                    borderTop: "2px solid var(--color-accent)",
+                    padding: "12px 20px 20px",
                     display: "flex",
                     alignItems: "center",
-                    gap: 6,
-                    fontFamily: "'Noto Sans JP', sans-serif",
+                    gap: 12,
+                    boxShadow: "0 -4px 24px rgba(201,168,76,0.25)",
+                    zIndex: 40,
+                    backdropFilter: "blur(8px)",
                   }}
                 >
-                  <ShoppingCart size={15} />
-                  見積もりを確認
-                </button>
-              </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 11, color: "var(--color-text-muted)", marginBottom: 2 }}>選択中</div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: "var(--color-accent)" }}>{totalCount}点</div>
+                  </div>
+                  <button
+                    onClick={handleViewEstimate}
+                    style={{
+                      background: "var(--color-accent)",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: 14,
+                      padding: "14px 28px",
+                      fontWeight: 700,
+                      fontSize: 15,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontFamily: "'Noto Sans JP', sans-serif",
+                      flex: 2,
+                      justifyContent: "center",
+                      boxShadow: "0 4px 16px rgba(201,168,76,0.4)",
+                    }}
+                  >
+                    <ShoppingCart size={18} />
+                    見積もりを確認
+                  </button>
+                </div>
+              ) : (
+                /* PC: 右上固定 */
+                <div
+                  className="animate-fade-in"
+                  style={{
+                    position: "fixed",
+                    top: 24,
+                    right: 24,
+                    background: "var(--color-surface2)",
+                    border: "1px solid var(--color-accent)",
+                    borderRadius: 24,
+                    padding: "12px 24px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 16,
+                    boxShadow: "0 8px 32px rgba(201,168,76,0.2)",
+                    zIndex: 40,
+                    backdropFilter: "blur(8px)",
+                  }}
+                >
+                  <span style={{ fontSize: 13, color: "var(--color-text-muted)" }}>
+                    {totalCount}点を選択中
+                  </span>
+                  <button
+                    onClick={handleViewEstimate}
+                    style={{
+                      background: "var(--color-accent)",
+                      color: "#ffffff",
+                      border: "none",
+                      borderRadius: 20,
+                      padding: "8px 20px",
+                      fontWeight: 700,
+                      fontSize: 13,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      fontFamily: "'Noto Sans JP', sans-serif",
+                    }}
+                  >
+                    <ShoppingCart size={15} />
+                    見積もりを確認
+                  </button>
+                </div>
+              )
             )}
           </div>
         )}
