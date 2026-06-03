@@ -516,6 +516,33 @@ const app = new Hono()
   })
 
   // ============================================================
+  // Admin: Delete estimate record
+  // ============================================================
+  .delete("/admin/estimates/:id", async (c) => {
+    const auth = c.req.header("x-admin-token");
+    if (!auth || Buffer.from(auth, "base64").toString() !== ADMIN_PASSWORD) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+    const id = parseInt(c.req.param("id"));
+    await db.delete(schema.estimates).where(eq(schema.estimates.id, id));
+    return c.json({ ok: true }, 200);
+  })
+
+  // ============================================================
+  // Admin: Delete visitor (and their estimates)
+  // ============================================================
+  .delete("/admin/visitors/:id", async (c) => {
+    const auth = c.req.header("x-admin-token");
+    if (!auth || Buffer.from(auth, "base64").toString() !== ADMIN_PASSWORD) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+    const id = parseInt(c.req.param("id"));
+    await db.delete(schema.estimates).where(eq(schema.estimates.visitorId, id));
+    await db.delete(schema.visitors).where(eq(schema.visitors.id, id));
+    return c.json({ ok: true }, 200);
+  })
+
+  // ============================================================
   // Admin: Get visitors list
   // ============================================================
   .get("/admin/visitors", async (c) => {

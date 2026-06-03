@@ -54,6 +54,8 @@ export default function AdminPage() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [deletingEstimate, setDeletingEstimate] = useState<number | null>(null);
+  const [deletingVisitor, setDeletingVisitor] = useState<number | null>(null);
 
   const login = async () => {
     setLoginError("");
@@ -97,6 +99,43 @@ export default function AdminPage() {
   useEffect(() => {
     if (token) fetchVisitors(token);
   }, [token]);
+
+  const deleteEstimate = async (estimateId: number, visitorId: number) => {
+    if (!token) return;
+    if (!window.confirm("この見積履歴を削除しますか？")) return;
+    setDeletingEstimate(estimateId);
+    try {
+      await fetch(`/api/admin/estimates/${estimateId}`, {
+        method: "DELETE",
+        headers: { "x-admin-token": token },
+      });
+      setVisitors((prev) =>
+        prev.map((v) =>
+          v.id === visitorId
+            ? { ...v, estimateHistory: v.estimateHistory.filter((e) => e.id !== estimateId), estimateCount: Math.max(0, (v.estimateCount ?? 1) - 1) }
+            : v
+        )
+      );
+    } finally {
+      setDeletingEstimate(null);
+    }
+  };
+
+  const deleteVisitor = async (visitorId: number) => {
+    if (!token) return;
+    if (!window.confirm("このユーザーと全ての見積履歴を削除しますか？")) return;
+    setDeletingVisitor(visitorId);
+    try {
+      await fetch(`/api/admin/visitors/${visitorId}`, {
+        method: "DELETE",
+        headers: { "x-admin-token": token },
+      });
+      setVisitors((prev) => prev.filter((v) => v.id !== visitorId));
+      if (expandedId === visitorId) setExpandedId(null);
+    } finally {
+      setDeletingVisitor(null);
+    }
+  };
 
   const filtered = visitors.filter(
     (v) => v.name.includes(search) || v.postalCode.includes(search)
@@ -161,9 +200,9 @@ export default function AdminPage() {
 
         {/* Column headers */}
         {!loading && filtered.length > 0 && (
-          <div style={{ display: "grid", gridTemplateColumns: "28px 1fr 110px 155px 70px 24px", gap: 12, padding: "0 20px 8px", marginBottom: 4 }}>
-            {["#", "お名前・郵便番号", "登録日時", "最終見積日時", "見積回数", ""].map((h) => (
-              <span key={h} style={{ fontSize: 11, color: "#555" }}>{h}</span>
+          <div style={{ display: "grid", gridTemplateColumns: "28px 1fr 110px 155px 70px 24px 36px", gap: 12, padding: "0 20px 8px", marginBottom: 4 }}>
+            {["#", "お名前・郵便番号", "登録日時", "最終見積日時", "見積回数", "", ""].map((h, i) => (
+              <span key={i} style={{ fontSize: 11, color: "#555" }}>{h}</span>
             ))}
           </div>
         )}
@@ -183,34 +222,63 @@ export default function AdminPage() {
                 <div key={v.id} style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 12, overflow: "hidden" }}>
                   {/* Summary row */}
                   <div
-                    onClick={() => hasHistory && setExpandedId(isOpen ? null : v.id)}
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "28px 1fr 110px 155px 70px 24px",
+                      gridTemplateColumns: "28px 1fr 110px 155px 70px 24px 36px",
                       alignItems: "center",
                       padding: "14px 20px",
                       gap: 12,
-                      cursor: hasHistory ? "pointer" : "default",
                       background: isOpen ? "#1f1f1f" : "transparent",
                     }}
                   >
                     <span style={{ color: "#555", fontSize: 12 }}>{i + 1}</span>
-                    <div>
+                    <div
+                      onClick={() => hasHistory && setExpandedId(isOpen ? null : v.id)}
+                      style={{ cursor: hasHistory ? "pointer" : "default" }}
+                    >
                       <div style={{ fontWeight: 700, color: "#eee", fontSize: 14 }}>{v.name}</div>
                       <div style={{ color: "#c8a96e", fontFamily: "monospace", fontSize: 12, marginTop: 2 }}>〒{v.postalCode}</div>
                     </div>
-                    <span style={{ color: "#666", fontSize: 12 }}>{formatDate(v.registeredAt)}</span>
-                    <span style={{ color: "#888", fontSize: 12 }}>{formatDate(v.lastEstimateAt)}</span>
-                    <span>
+                    <span
+                      onClick={() => hasHistory && setExpandedId(isOpen ? null : v.id)}
+                      style={{ color: "#666", fontSize: 12, cursor: hasHistory ? "pointer" : "default" }}
+                    >{formatDate(v.registeredAt)}</span>
+                    <span
+                      onClick={() => hasHistory && setExpandedId(isOpen ? null : v.id)}
+                      style={{ color: "#888", fontSize: 12, cursor: hasHistory ? "pointer" : "default" }}
+                    >{formatDate(v.lastEstimateAt)}</span>
+                    <span
+                      onClick={() => hasHistory && setExpandedId(isOpen ? null : v.id)}
+                      style={{ cursor: hasHistory ? "pointer" : "default" }}
+                    >
                       {(v.estimateCount ?? 0) > 0 ? (
                         <span style={{ display: "inline-block", padding: "2px 10px", background: "#2a2a1a", border: "1px solid #c8a96e55", borderRadius: 12, color: "#c8a96e", fontSize: 13, fontWeight: 700 }}>
                           {v.estimateCount}回
                         </span>
                       ) : <span style={{ color: "#555", fontSize: 13 }}>—</span>}
                     </span>
-                    <span style={{ color: hasHistory ? "#888" : "#333", fontSize: 14, textAlign: "right" }}>
+                    <span
+                      onClick={() => hasHistory && setExpandedId(isOpen ? null : v.id)}
+                      style={{ color: hasHistory ? "#888" : "#333", fontSize: 14, textAlign: "right", cursor: hasHistory ? "pointer" : "default" }}
+                    >
                       {hasHistory ? (isOpen ? "▲" : "▼") : ""}
                     </span>
+                    {/* ユーザー削除ボタン */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); deleteVisitor(v.id); }}
+                      disabled={deletingVisitor === v.id}
+                      title="ユーザーを削除"
+                      style={{
+                        width: 28, height: 28, padding: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                        background: "transparent", border: "1px solid #3a2020", borderRadius: 6,
+                        color: "#664444", fontSize: 14, cursor: "pointer", transition: "all 0.15s",
+                        opacity: deletingVisitor === v.id ? 0.5 : 1,
+                      }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#2a1010"; (e.currentTarget as HTMLButtonElement).style.color = "#cc4444"; (e.currentTarget as HTMLButtonElement).style.borderColor = "#663333"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = "#664444"; (e.currentTarget as HTMLButtonElement).style.borderColor = "#3a2020"; }}
+                    >
+                      {deletingVisitor === v.id ? "…" : "✕"}
+                    </button>
                   </div>
 
                   {/* Estimate history */}
@@ -238,7 +306,24 @@ export default function AdminPage() {
                                     <span style={{ fontSize: 12, color: "#555" }}>場所未選択</span>
                                   )}
                                 </div>
-                                <span style={{ fontSize: 12, color: "#666" }}>{formatDate(est.createdAt)}</span>
+                                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                  <span style={{ fontSize: 12, color: "#666" }}>{formatDate(est.createdAt)}</span>
+                                  {/* 見積削除ボタン */}
+                                  <button
+                                    onClick={() => deleteEstimate(est.id, v.id)}
+                                    disabled={deletingEstimate === est.id}
+                                    title="この見積を削除"
+                                    style={{
+                                      padding: "3px 10px", background: "transparent", border: "1px solid #3a2020",
+                                      borderRadius: 5, color: "#664444", fontSize: 12, cursor: "pointer", transition: "all 0.15s",
+                                      opacity: deletingEstimate === est.id ? 0.5 : 1,
+                                    }}
+                                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#2a1010"; (e.currentTarget as HTMLButtonElement).style.color = "#cc4444"; (e.currentTarget as HTMLButtonElement).style.borderColor = "#663333"; }}
+                                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = "#664444"; (e.currentTarget as HTMLButtonElement).style.borderColor = "#3a2020"; }}
+                                  >
+                                    {deletingEstimate === est.id ? "削除中…" : "削除"}
+                                  </button>
+                                </div>
                               </div>
 
                               {/* Items table */}
