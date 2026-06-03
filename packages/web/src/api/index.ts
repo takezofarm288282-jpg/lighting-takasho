@@ -2,8 +2,11 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { db } from "./database";
 import * as schema from "./database/schema";
-import { eq, and, gte, lte, inArray, sql } from "drizzle-orm";
+import { eq, and, gte, lte, inArray, desc } from "drizzle-orm";
 import { exec } from "child_process";
+
+// 管理者パスワード（環境変数から、なければデフォルト）
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "takasho2024admin";
 
 const app = new Hono()
   .basePath("api")
@@ -52,12 +55,12 @@ const app = new Hono()
     const colorTemp = c.req.query("colorTemp");
     const style = c.req.query("style");
     const minLumen = c.req.query("minLumen");
-    const maxBeamAngle = c.req.query("maxBeamAngle");   // 照射角度 上限 (narrow=30, wide=120+)
+    const maxBeamAngle = c.req.query("maxBeamAngle");
     const minBeamAngle = c.req.query("minBeamAngle");
-    const maxReach = c.req.query("maxReach");            // 照射距離 上限 (m)
+    const maxReach = c.req.query("maxReach");
     const minReach = c.req.query("minReach");
-    const voltage = c.req.query("voltage");              // 電圧: "12V" | "24V" | "100V"
-    const maker = c.req.query("maker");                  // メーカー: "TAKASHO" | "LIXIL"
+    const voltage = c.req.query("voltage");
+    const maker = c.req.query("maker");
 
     let query = db
       .select({ product: schema.products, category: schema.categories })
@@ -138,6 +141,34 @@ const app = new Hono()
     return c.json({ estimate: { items, total } }, 200);
   })
 
+  // ============================================================
+  // Register visitor (called when user submits name + postalCode)
+  // ============================================================
+  .post("/register-visitor", async (c) => {
+    const { name, postalCode } = await c.req.json<{ name: string; postalCode: string }>();
+    if (!name || !postalCode) return c.json({ error: "name and postalCode required" }, 400);
+
+    const now = new Date().toISOString();
+
+    // 同じ名前+郵便番号が既にいれば更新しない（重複防止）
+    const existing = await db
+      .select()
+      .from(schema.visitors)
+      .where(and(eq(schema.visitors.name, name.trim()), eq(schema.visitors.postalCode, postalCode.trim())))
+      .limit(1);
+
+    if (!existing[0]) {
+      await db.insert(schema.visitors).values({
+        name: name.trim(),
+        postalCode: postalCode.trim(),
+        registeredAt: now,
+        estimateCount: 0,
+      });
+    }
+
+    return c.json({ ok: true }, 200);
+  })
+
   // Send estimate email
   .post("/send-estimate", async (c) => {
     const { name, postalCode, items, total } = await c.req.json<{
@@ -215,14 +246,15 @@ const app = new Hono()
 </body>
 </html>`;
 
-    await new Promise<void>((resolve, reject) => {
+    // メール送信（失敗してもエラーにしない）
+    new Promise<void>((resolve) => {
       const child = exec(
         `send-email --to "izumo@takezofarm.co.jp" --subject "【見積依頼】${name} 様（〒${postalCode}）" --html -`,
-        (err) => { if (err) reject(err); else resolve(); }
+        () => resolve()
       );
       child.stdin!.write(html);
       child.stdin!.end();
-    });
+    }).catch(() => {});
 
     return c.json({ ok: true }, 200);
   })
@@ -240,6 +272,33 @@ const app = new Hono()
     const totalWithTax = Math.floor(total * 1.1);
     const now = new Date();
     const dateStr = now.toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" });
+
+    // 見積回数をDBに記録
+    const nowIso = now.toISOString();
+    const existing = await db
+      .select()
+      .from(schema.visitors)
+      .where(and(eq(schema.visitors.name, name.trim()), eq(schema.visitors.postalCode, postalCode.trim())))
+      .limit(1);
+
+    if (existing[0]) {
+      await db
+        .update(schema.visitors)
+        .set({
+          lastEstimateAt: nowIso,
+          estimateCount: (existing[0].estimateCount ?? 0) + 1,
+        })
+        .where(eq(schema.visitors.id, existing[0].id));
+    } else {
+      // 登録されていなければ新規作成
+      await db.insert(schema.visitors).values({
+        name: name.trim(),
+        postalCode: postalCode.trim(),
+        registeredAt: nowIso,
+        lastEstimateAt: nowIso,
+        estimateCount: 1,
+      });
+    }
 
     const itemRows = items.map((item) =>
       `<tr>
@@ -342,7 +401,7 @@ const app = new Hono()
     const pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
     await browser.close();
 
-    // 裏でメール送信（PDFダウンロードと同時）
+    // メール送信（失敗しても無視）
     const emailTax = Math.floor(total * 0.1);
     const emailTotalWithTax = Math.floor(total * 1.1);
     const emailItemRows = items.map((item) =>
@@ -418,6 +477,34 @@ const app = new Hono()
         "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent("見積書")}_${now.toISOString().slice(0,10).replace(/-/g,"")}.pdf`,
       },
     });
+  })
+
+  // ============================================================
+  // Admin: Login
+  // ============================================================
+  .post("/admin/login", async (c) => {
+    const { password } = await c.req.json<{ password: string }>();
+    if (password === ADMIN_PASSWORD) {
+      return c.json({ ok: true, token: Buffer.from(ADMIN_PASSWORD).toString("base64") }, 200);
+    }
+    return c.json({ error: "Unauthorized" }, 401);
+  })
+
+  // ============================================================
+  // Admin: Get visitors list
+  // ============================================================
+  .get("/admin/visitors", async (c) => {
+    const auth = c.req.header("x-admin-token");
+    if (!auth || Buffer.from(auth, "base64").toString() !== ADMIN_PASSWORD) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const visitors = await db
+      .select()
+      .from(schema.visitors)
+      .orderBy(desc(schema.visitors.registeredAt));
+
+    return c.json({ visitors }, 200);
   });
 
 export type AppType = typeof app;

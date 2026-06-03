@@ -2199,6 +2199,12 @@ export default function SelectorPage() {
                 setPostalCode(postalCode.trim());
                 setUserInfoConfirmed(true);
                 setShowRegisterModal(false);
+                // サーバーDBに登録情報を保存
+                fetch("/api/register-visitor", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ name: userName.trim(), postalCode: postalCode.trim() }),
+                }).catch(() => {});
                 if (pendingLocation !== null) {
                   setSelectedLocation(pendingLocation);
                   setSelectedCategory(null);

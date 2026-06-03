@@ -43,3 +43,12 @@ export const products = sqliteTable("products", {
   maker: text("maker").default("TAKASHO"), // メーカー: "TAKASHO" | "LIXIL"
   images: text("images"), // JSON配列 e.g. '["url1","url2","url3"]'
 });
+
+export const visitors = sqliteTable("visitors", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  postalCode: text("postal_code").notNull(),
+  registeredAt: text("registered_at").notNull(), // ISO string
+  lastEstimateAt: text("last_estimate_at"),       // 最後に見積した日時
+  estimateCount: integer("estimate_count").default(0), // 見積回数
+});
