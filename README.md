@@ -1,65 +1,48 @@
-# sandbox-app-template
+# ガーデンライトセレクター（TAKASHO / LIXIL）
 
-Monorepo: Bun workspaces + Turborepo.
+タケゾーファームの外構照明セレクター。
+**サーバー不要**の静的サイトで、GitHub Pages に無料で公開されます。
 
-## Project Structure
+- 公開URL: `https://takezofarm288282-jpg.github.io/lighting-takasho/`
+- 管理画面: 上記URLの末尾に `#/admin` を付ける
+- 施工例ページ: 末尾に `#/cases`
 
-```
-.env                         Secrets (gitignored), loaded via Vite's loadEnv
-packages/
-  web/                       Unified server (API + web frontend via Vite)
-    vite.config.ts           Vite 7 config — loads .env, sets port, registers plugins
-    index.html               Frontend HTML entry
-    vite/plugins/
-      hono-dev-plugin.ts     Intercepts /api/* in dev, forwards to Hono via SSR
-      runable-analytics-plugin.ts
-    src/
-      api/
-        index.ts             Hono routes (.basePath('api')) + AppType export
-        database/
-          index.ts           Database client (Turso/LibSQL)
-          schema.ts          Drizzle schema
-      web/
-        main.tsx             App entry
-        app.tsx              Root component + Wouter routing
-        pages/               Page components
-        components/          UI components
-        hooks/
-          use-desktop.ts     Desktop detection
-        lib/
-          api.ts             Typed API client (hono client)
-          desktop.ts         Electron API types
-          utils.ts           Shared utilities
-        styles.css           Tailwind CSS entry
-  mobile/                    Expo + React Native + expo-router
-    app/                     File-based routing
-    lib/
-      api.ts                 Typed API client
-  desktop/                   Electron shell (loads web app from server)
-    electron/
-      main.ts                Main process + IPC handlers
-      preload.ts             contextBridge API
-    vite.config.ts           Vite config
+## 仕組み
+
+| やること | どこで動くか |
+|---|---|
+| 商品202点の表示・絞り込み・見積計算 | ブラウザの中だけ（`src/data/catalog.ts`） |
+| 見積書PDFの作成 | ブラウザの中だけ |
+| 来場者・見積の記録／メール通知 | Googleスプレッドシート（Google Apps Script） |
+
+以前は ConoHa VPS 上でサーバー（Bun + Hono + Turso）を動かしていましたが、
+サーバーが止まるとページが真っ白になるため、上記の構成に作り替えました。
+
+## 更新のしかた
+
+1. ファイルを直して GitHub に push する
+2. 自動でビルドされ、数分後に公開ページへ反映される（`.github/workflows/deploy.yml`）
+
+### 商品を追加・修正したいとき
+
+`src/data/catalog.ts` を編集します。商品は次の形です。
+
+```ts
+{ name: "商品名", modelNo: "型番", categoryId: catMap["garden-uplight"], price: 14800,
+  lumen: 350, colorTemp: "電球色 2700K", ipRating: "IP65", style: "モダン", watt: 4.0,
+  imageUrl: "画像URL", catalogPage: 34, description: "説明",
+  features: JSON.stringify(["特徴1", "特徴2"]),
+  beamAngle: 30, reachDistance: 3.0, voltage: "12V" }
 ```
 
-## Environment Variables
+## 初期セットアップ
 
-Secrets and credentials live in `.env` at the project root (gitignored). Vite's `loadEnv` loads them into `process.env` at dev/build time (configured in `packages/web/vite.config.ts`). In API code (Hono), use `process.env.YOUR_VAR`. In browser code, only `VITE_`-prefixed vars are exposed via `import.meta.env.VITE_YOUR_VAR`. Drizzle scripts use `bun --env-file=../../.env` to load env vars directly.
+`docs/セットアップ.md` を参照してください。
 
-## Desktop UI
+## 手元で動かす場合
 
-The desktop app has no separate renderer by default. It loads the web app from `packages/web`; desktop-specific UI should live in `packages/web/src/web/` and be gated with `useDesktop()` / `window.electronAPI`. Keep `packages/desktop` for Electron window setup, menus/tray/shortcuts, IPC handlers, native OS APIs, and packaging. Only add a separate desktop renderer when the product intentionally needs a different desktop-only UI architecture.
-
-## Servers
-
-Dev servers are started and managed automatically — no need to run them manually.
-
-## Database
-
-```sh
-cd packages/web
-bun run db:push        # Push schema to database
-bun run db:generate    # Generate migration files
-bun run db:migrate     # Run migrations
-bun run db:studio      # Open Drizzle Studio
+```bash
+npm install
+npm run dev     # http://localhost:4200
+npm run build   # dist/ に書き出し
 ```
