@@ -23,14 +23,14 @@ export type EstimateLineItem = {
   subtotal: number;
 };
 
-/** 来場者の名前・郵便番号を記録する */
+/** 来場者の名前・郵便番号を記録する（現在は登録画面を廃止したため未使用） */
 export function registerVisitor(name: string, postalCode: string) {
   return call("registerVisitor", { name: name.trim(), postalCode: postalCode.trim() }).catch(
     () => null
   );
 }
 
-/** 見積内容を記録し、メール通知を送る */
+/** 見積内容を記録し、メール通知を送る（お名前が空のときは匿名として記録される） */
 export function recordEstimate(params: {
   name: string;
   postalCode: string;
