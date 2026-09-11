@@ -3,7 +3,7 @@ import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import { registerVisitor, recordEstimate } from "../lib/backend";
+import { recordEstimate } from "../lib/backend";
 import { downloadEstimatePdf } from "../lib/pdf";
 import { useEstimate } from "../hooks/useEstimate";
 import { LocationIcon } from "../components/LocationIcon";
@@ -1940,15 +1940,9 @@ export default function SelectorPage() {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [showEstimate, setShowEstimate] = useState(false);
 
-  const [userName, setUserName] = useState(() => (typeof window !== "undefined" ? localStorage.getItem("userName") || "" : ""));
-  const [postalCode, setPostalCode] = useState(() => (typeof window !== "undefined" ? localStorage.getItem("postalCode") || "" : ""));
-  const [userInfoConfirmed, setUserInfoConfirmed] = useState(() => typeof window !== "undefined" ? !!(localStorage.getItem("userName") && localStorage.getItem("postalCode")) : false);
-  const [showRegisterModal, setShowRegisterModal] = useState(false);
-  const [pendingAddId, setPendingAddId] = useState<number | null>(null);
-  const [pendingLocation, setPendingLocation] = useState<Location | null>(null);
-  const [pendingSelectMode, setPendingSelectMode] = useState<SelectMode | null>(null);
-  const [pendingTreeHeight, setPendingTreeHeight] = useState<typeof TREE_HEIGHTS[number] | null>(null);
-  const [pendingShape, setPendingShape] = useState<typeof SHAPE_CATEGORIES[number] | null>(null);
+  // お客様情報（お名前・郵便番号）の登録は廃止。誰でもそのまま使えるようにしている。
+  const userName = "";
+  const postalCode = "";
 
   const [pdfDownloading, setPdfDownloading] = useState(false);
   const [selectedMaker, setSelectedMaker] = useState<"ALL" | "TAKASHO" | "LIXIL">("ALL");
@@ -2100,11 +2094,6 @@ export default function SelectorPage() {
   }, [estimateResult, pdfDownloading, userName, postalCode, selectedLocation]);
 
   const handleLocationSelect = (loc: Location) => {
-    if (!userInfoConfirmed) {
-      setPendingLocation(loc);
-      setShowRegisterModal(true);
-      return;
-    }
     setSelectedLocation(loc);
     setSelectedCategory(null);
     setStep("category");
@@ -2116,13 +2105,6 @@ export default function SelectorPage() {
   };
 
   const handleViewEstimate = () => {
-    const userName = localStorage.getItem("userName");
-    const postalCode = localStorage.getItem("postalCode");
-    if (!userName || !postalCode) {
-      setPendingAddId(null);
-      setShowRegisterModal(true);
-      return;
-    }
     setShowEstimate(true);
     estimateMutation.mutate();
   };
@@ -2142,131 +2124,12 @@ export default function SelectorPage() {
 
   const stepIndex = steps.findIndex((s) => s.key === step);
 
-  // User info gate — show full-screen form until confirmed
-  // 登録済みチェック付きaddItem
   const addItemWithCheck = (productId: number) => {
-    if (!userInfoConfirmed) {
-      setPendingAddId(productId);
-      setShowRegisterModal(true);
-    } else {
-      addItem(productId);
-    }
+    addItem(productId);
   };
 
   return (
     <>
-    {showRegisterModal && (
-      <div
-        style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
-        onClick={() => setShowRegisterModal(false)}
-      >
-        <div
-          style={{ width: "100%", maxWidth: 400, background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: 16, padding: "32px 28px" }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div style={{ textAlign: "center", marginBottom: 24 }}>
-            <div style={{ fontSize: 11, letterSpacing: "0.2em", color: "var(--color-accent)", marginBottom: 8, fontFamily: "'Noto Serif JP', serif" }}>TAKASHO × LIXIL</div>
-            <h2 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 700, color: "var(--color-text)", fontFamily: "'Noto Serif JP', serif" }}>お客様情報の登録</h2>
-            <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-muted)", fontFamily: "'Noto Sans JP', sans-serif", lineHeight: 1.7 }}>
-              見積書に記載するお名前と<br />郵便番号をご入力ください。
-            </p>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <div>
-              <label style={{ display: "block", fontSize: 12, color: "var(--color-text-muted)", marginBottom: 5, fontFamily: "'Noto Sans JP', sans-serif" }}>お名前 <span style={{ color: "#e05" }}>*</span></label>
-              <input
-                type="text"
-                value={userName}
-                onChange={(e) => setUserName(e.target.value)}
-                placeholder="例：田中 太郎"
-                autoFocus
-                style={{ width: "100%", padding: "11px 13px", background: "var(--color-surface2)", border: "1px solid var(--color-border)", borderRadius: 8, color: "var(--color-text)", fontSize: 14, fontFamily: "'Noto Sans JP', sans-serif", boxSizing: "border-box", outline: "none" }}
-              />
-            </div>
-            <div>
-              <label style={{ display: "block", fontSize: 12, color: "var(--color-text-muted)", marginBottom: 5, fontFamily: "'Noto Sans JP', sans-serif" }}>郵便番号 <span style={{ color: "#e05" }}>*</span></label>
-              <input
-                type="text"
-                value={postalCode}
-                onChange={(e) => setPostalCode(e.target.value)}
-                placeholder="例：123-4567"
-                maxLength={8}
-                style={{ width: "100%", padding: "11px 13px", background: "var(--color-surface2)", border: "1px solid var(--color-border)", borderRadius: 8, color: "var(--color-text)", fontSize: 14, fontFamily: "'Noto Sans JP', sans-serif", boxSizing: "border-box", outline: "none" }}
-              />
-            </div>
-            <button
-              onClick={() => {
-                if (!userName.trim() || !postalCode.trim()) return;
-                localStorage.setItem("userName", userName.trim());
-                localStorage.setItem("postalCode", postalCode.trim());
-                setUserName(userName.trim());
-                setPostalCode(postalCode.trim());
-                setUserInfoConfirmed(true);
-                setShowRegisterModal(false);
-                // サーバーDBに登録情報を保存
-                registerVisitor(userName.trim(), postalCode.trim());
-                if (pendingLocation !== null) {
-                  setSelectedLocation(pendingLocation);
-                  setSelectedCategory(null);
-                  setStep("category");
-                  setPendingLocation(null);
-                } else if (pendingTreeHeight !== null) {
-                  setSelectedTreeHeight(pendingTreeHeight);
-                  setSelectedTreeLightType(null);
-                  setSelectedTreeBeamAngle(null);
-                  setSelectedTreeVoltage(null);
-                  setTreeStep("lightType");
-                  setPendingTreeHeight(null);
-                } else if (pendingShape !== null) {
-                  setSelectedShape(pendingShape);
-                  setShapeStep("products");
-                  setShapePriceRange(PRICE_RANGES[0]);
-                  setShapeColorTemp("指定なし");
-                  setShapeStyle("指定なし");
-                  setPendingShape(null);
-                } else if (pendingSelectMode === "tree") {
-                  setSelectMode("tree");
-                  setTreeStep("height");
-                  setSelectedTreeHeight(null);
-                  setSelectedTreeLightType(null);
-                  setSelectedTreeBeamAngle(null);
-                  setSelectedTreeVoltage(null);
-                  setPendingSelectMode(null);
-                } else if (pendingSelectMode === "shape") {
-                  setSelectMode("shape");
-                  setShapeStep("select");
-                  setSelectedShape(null);
-                  setPendingSelectMode(null);
-                } else if (pendingAddId !== null) {
-                  addItem(pendingAddId);
-                  setPendingAddId(null);
-                } else {
-                  setShowEstimate(true);
-                  estimateMutation.mutate();
-                }
-              }}
-              disabled={!userName.trim() || !postalCode.trim()}
-              style={{
-                width: "100%", padding: "13px", marginTop: 4,
-                background: (!userName.trim() || !postalCode.trim()) ? "var(--color-surface2)" : "var(--color-accent)",
-                border: "none", borderRadius: 8,
-                color: (!userName.trim() || !postalCode.trim()) ? "var(--color-text-muted)" : "#ffffff",
-                cursor: (!userName.trim() || !postalCode.trim()) ? "not-allowed" : "pointer",
-                fontSize: 14, fontWeight: 700, fontFamily: "'Noto Sans JP', sans-serif", transition: "background 0.2s",
-              }}
-            >
-              登録して続ける →
-            </button>
-            <button
-              onClick={() => { setShowRegisterModal(false); setPendingAddId(null); setPendingLocation(null); setPendingSelectMode(null); setPendingTreeHeight(null); setPendingShape(null); }}
-              style={{ background: "none", border: "none", color: "var(--color-text-muted)", fontSize: 12, cursor: "pointer", textAlign: "center", fontFamily: "'Noto Sans JP', sans-serif" }}
-            >
-              キャンセル
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
     <div style={{ minHeight: "100vh", background: "var(--color-bg)" }}>
       {/* Header */}
       <header
@@ -2484,11 +2347,6 @@ export default function SelectorPage() {
                     <button
                       key={t.key}
                       onClick={() => {
-                        if (!userInfoConfirmed) {
-                          setPendingTreeHeight(t);
-                          setShowRegisterModal(true);
-                          return;
-                        }
                         setSelectedTreeHeight(t);
                         setSelectedTreeLightType(null);
                         setSelectedTreeBeamAngle(null);
@@ -2869,11 +2727,6 @@ export default function SelectorPage() {
                       key={shape.slug}
                       className={`animate-fade-in-up stagger-${Math.min(i + 1, 6)}`}
                       onClick={() => {
-                        if (!userInfoConfirmed) {
-                          setPendingShape(shape);
-                          setShowRegisterModal(true);
-                          return;
-                        }
                         setSelectedShape(shape);
                         setShapeStep("products");
                         setShapePriceRange(PRICE_RANGES[0]);
