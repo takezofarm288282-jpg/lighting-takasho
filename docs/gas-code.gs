@@ -101,7 +101,8 @@ function registerVisitor_(b) {
 }
 
 function recordEstimate_(b) {
-  const name = String(b.name || '').trim();
+  // お客様情報の登録は廃止したため、名前が空のときは「（匿名）」として記録する
+  const name = String(b.name || '').trim() || '（匿名）';
   const postalCode = String(b.postalCode || '').trim();
   const items = b.items || [];
   const total = Number(b.total) || 0;
@@ -138,7 +139,7 @@ function sendMail_(name, postalCode, locationName, items, total) {
   const html =
     '<div style="font-family:sans-serif;max-width:640px;">' +
     '<h2 style="color:#7a3a10;">ガーデンライト 見積が作成されました</h2>' +
-    '<p>お名前：' + name + ' 様<br>郵便番号：〒' + postalCode +
+    '<p>お名前：' + name + (postalCode ? ' 様<br>郵便番号：〒' + postalCode : ' 様') +
     (locationName ? '<br>施工場所：' + locationName : '') + '</p>' +
     '<table style="width:100%;border-collapse:collapse;font-size:13px;">' +
     '<tr style="background:#f2f2f2;"><th style="padding:8px 12px;text-align:left;">型番</th>' +
@@ -152,7 +153,7 @@ function sendMail_(name, postalCode, locationName, items, total) {
 
   MailApp.sendEmail({
     to: CONFIG.NOTIFY_EMAIL,
-    subject: '【見積】' + name + ' 様（〒' + postalCode + '）',
+    subject: postalCode ? ('【見積】' + name + ' 様（〒' + postalCode + '）') : '【見積】ガーデンライトセレクター',
     htmlBody: html,
   });
 }
