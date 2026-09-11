@@ -992,7 +992,7 @@ const TREE_BEAM_ANGLES = [
     minAngle: 0,
     maxAngle: 45,
     color: "#f59e0b",
-    image: "/images/beam/narrow.png",
+    image: "images/beam/narrow.png",
   },
   {
     key: "wide",
@@ -1004,7 +1004,7 @@ const TREE_BEAM_ANGLES = [
     minAngle: 120,
     maxAngle: 999,
     color: "#60a5fa",
-    image: "/images/beam/wide.png",
+    image: "images/beam/wide.png",
   },
 ] as const;
 
@@ -2510,7 +2510,7 @@ export default function SelectorPage() {
                     >
                       <div style={{ width: "100%", height: 140, overflow: "hidden", background: "rgba(0,0,0,0.3)", position: "relative" }}>
                         <img
-                          src={`/images/trees/${t.key}.png`}
+                          src={`images/trees/${t.key}.png`}
                           alt={`${t.label} 照明図解`}
                           style={{ width: "100%", height: "100%", objectFit: "cover" }}
                           onError={(e) => {
@@ -3173,7 +3173,7 @@ export default function SelectorPage() {
                     {/* Location photo */}
                     <div style={{ width: "100%", height: 150, overflow: "hidden", background: "rgba(201,168,76,0.06)", position: "relative" }}>
                       <img
-                        src={`/images/locations/${loc.slug}.png`}
+                        src={`images/locations/${loc.slug}.png`}
                         alt={loc.name}
                         style={{ width: "100%", height: "100%", objectFit: "cover" }}
                         onError={(e) => {

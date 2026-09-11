@@ -27,7 +27,7 @@ const CASE_STUDIES: CaseStudy[] = [
     tagline: "おもてなしの光",
     description:
       "エントランスは、訪れる人にとっての第一印象を決める大切な接点。表札を見せるなどの機能はもちろん、人をもてなす気持ちなど、ライティングは情緒を表す手段にもなります。門柱・アプローチ・壁面を立体的に照らすことで、昼間とは異なる格調ある顔を演出します。",
-    spread: { left: "/cases/P14_15_page-1.jpg", right: "/cases/P14_15_page-2.jpg" },
+    spread: { left: "cases/P14_15_page-1.jpg", right: "cases/P14_15_page-2.jpg" },
     products: [
       { code: "HCA-D25C", name: "ポールライト", page: "P.151" },
       { code: "HBB-D71C", name: "スポットライト", page: "P.049" },
@@ -52,7 +52,7 @@ const CASE_STUDIES: CaseStudy[] = [
     tagline: "安らぎと憩いの光",
     description:
       "一日の終わりを彩る庭の光。奥行きを感じさせるライティングが開放感を演出し、暗がりを楽しめるデザインが心に憩いをあたえてくれます。植栽のシルエット、水面の揺らぎ、石畳のテクスチャ——自然の素材を光で引き立てることが庭の魅力を最大化する鍵です。",
-    spread: { left: "/cases/P16_17_page-1.jpg", right: "/cases/P16_17_page-2.jpg" },
+    spread: { left: "cases/P16_17_page-1.jpg", right: "cases/P16_17_page-2.jpg" },
     products: [
       { code: "HBH-D07B", name: "グランドライト", page: "P.207" },
       { code: "HGB-D09T", name: "スパイクスポット", page: "P.246" },
@@ -78,7 +78,7 @@ const CASE_STUDIES: CaseStudy[] = [
     tagline: "心踊る優雅な光",
     description:
       "明るさを高く配置すると愉しさが、低くすると落ち着きが生まれます。その場所で過ごす人の視界を意識したライティングが、優雅な時間を演出します。テラスは室内と屋外の「境界」——建物の光とランドスケープ照明をつなぐ重要な役割を担います。",
-    spread: { left: "/cases/P18_19_page-1.jpg", right: "/cases/P18_19_page-2.jpg" },
+    spread: { left: "cases/P18_19_page-1.jpg", right: "cases/P18_19_page-2.jpg" },
     products: [
       { code: "HBC-D87R", name: "ウォールウォッシュ", page: "P.126" },
       { code: "HBF-D40H", name: "スポットライト", page: "P.261" },
@@ -103,7 +103,7 @@ const CASE_STUDIES: CaseStudy[] = [
     tagline: "感動を生む光",
     description:
       "その場所を活かし、丁寧にデザインされた光がもたらす、日常では体験できない感動。ここにしかない景色と光の組み合わせが、滞在するお客様に最高の時間を届けます。公園・商業施設・ホテルなど大規模空間では、演出効果と省エネ性能の両立が求められます。",
-    spread: { left: "/cases/P20_21_page-1.jpg", right: "/cases/P20_21_page-2.jpg" },
+    spread: { left: "cases/P20_21_page-1.jpg", right: "cases/P20_21_page-2.jpg" },
     products: [
       { code: "HBD-D41S", name: "ダウンライト（大型）", page: "P.107" },
       { code: "HHA-D25S", name: "スパイクスポット", page: "P.191" },
