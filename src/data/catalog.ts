@@ -586,11 +586,11 @@ function buildCatalog() {
       images: JSON.stringify(T_IMGS["014"]), catalogPage: 45, description: "丸型グロスタイプのLEDデッキライト。ホワイト。", features: JSON.stringify(["防雨型IP55", "埋込型", "丸型グロス", "ホワイト"]), beamAngle: 120, reachDistance: 1.0 },
     { name: "デッキライト 丸型ブロンズ ブラック B", modelNo: "HCD-B03B", categoryId: catMap["deck-light"], price: 7800, lumen: 60, colorTemp: "電球色 2700K", ipRating: "IP55", style: "モダン", watt: 1.5, imageUrl: `${BASE_IMG}/014/main3.jpg`,
       images: JSON.stringify(T_IMGS["014"]), catalogPage: 45, description: "丸型ブロンズタイプのLEDデッキライト。ブラック。", features: JSON.stringify(["防雨型IP55", "埋込型", "丸型", "ブラック"]), beamAngle: 120, reachDistance: 1.0 },
-    { name: "デッキライト ロングスクエア ホワイト", modelNo: "HCD-W17S", categoryId: catMap["deck-light"], price: 9800, lumen: 100, colorTemp: "電球色 2700K", ipRating: "IP55", style: "モダン", watt: 2.5, imageUrl: `${BASE_IMG}/014/main5.jpg`,
+    { name: "デッキライト ロングスクエア ホワイト", modelNo: "HCD-W17S", categoryId: catMap["deck-light"], price: 9800, lumen: 100, colorTemp: "電球色 2700K", ipRating: "IP55", style: "モダン", watt: 2.5, imageUrl: `${BASE_IMG}/014/main2.jpg`,
       images: JSON.stringify(T_IMGS["014"]), catalogPage: 45, description: "ロングスクエアタイプのLEDデッキライト。ホワイト。階段・長スパンに。", features: JSON.stringify(["防雨型IP55", "埋込型", "ロングスクエア", "ホワイト"]), beamAngle: 90, reachDistance: 1.5 },
-    { name: "デッキライト ロングスクエア ブラック", modelNo: "HCD-B17S", categoryId: catMap["deck-light"], price: 9800, lumen: 100, colorTemp: "電球色 2700K", ipRating: "IP55", style: "モダン", watt: 2.5, imageUrl: `${BASE_IMG}/014/main5.jpg`,
+    { name: "デッキライト ロングスクエア ブラック", modelNo: "HCD-B17S", categoryId: catMap["deck-light"], price: 9800, lumen: 100, colorTemp: "電球色 2700K", ipRating: "IP55", style: "モダン", watt: 2.5, imageUrl: `${BASE_IMG}/014/main2.jpg`,
       images: JSON.stringify(T_IMGS["014"]), catalogPage: 45, description: "ロングスクエアタイプのLEDデッキライト。ブラック。", features: JSON.stringify(["防雨型IP55", "埋込型", "ロングスクエア", "ブラック"]), beamAngle: 90, reachDistance: 1.5 },
-    { name: "デッキライト ロングスクエア ブラック 2灯", modelNo: "HCD-B18S", categoryId: catMap["deck-light"], price: 11800, lumen: 140, colorTemp: "電球色 2700K", ipRating: "IP55", style: "モダン", watt: 3.5, imageUrl: `${BASE_IMG}/014/main5.jpg`,
+    { name: "デッキライト ロングスクエア ブラック 2灯", modelNo: "HCD-B18S", categoryId: catMap["deck-light"], price: 11800, lumen: 140, colorTemp: "電球色 2700K", ipRating: "IP55", style: "モダン", watt: 3.5, imageUrl: `${BASE_IMG}/014/main2.jpg`,
       images: JSON.stringify(T_IMGS["014"]), catalogPage: 45, description: "2灯タイプのロングスクエアLEDデッキライト。ブラック。", features: JSON.stringify(["防雨型IP55", "埋込型", "2灯タイプ", "ブラック"]), beamAngle: 90, reachDistance: 2.0 },
 
 
